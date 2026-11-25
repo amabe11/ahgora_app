@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ahgora</string>
+    <string name="canal_avisos_nombre">Avisos de tu zona</string>
+    <string name="canal_avisos_desc">Novedades revisadas por el equipo de Ahgora para tu zona.</string>
+    <string name="notif_titulo">Ahgora</string>
+    <string name="notif_texto">Hay una actualización de Ahgora para tu zona.</string>
+</resources>
