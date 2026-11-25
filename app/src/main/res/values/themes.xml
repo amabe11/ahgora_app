@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ahgora_navy">#12303A</color>
+    <color name="ahgora_bg">#F4F7F5</color>
+    <color name="ic_launcher_background">#12303A</color>
+
+    <style name="Theme.Ahgora" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ahgora_bg</item>
+        <item name="android:statusBarColor">@color/ahgora_navy</item>
+        <item name="android:navigationBarColor">@color/ahgora_bg</item>
+    </style>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gota (agua/sedimento) con un punto de señal: Ahgora. Zona segura del ícono adaptativo: 66dp centrales. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- gota -->
+    <path
+        android:fillColor="#DCEFE9"
+        android:pathData="M54,26 C54,26 34,50 34,63 A20,20 0 0,0 74,63 C74,50 54,26 54,26 Z" />
+    <!-- capa de sedimento -->
+    <path
+        android:fillColor="#0E6B5C"
+        android:pathData="M35.2,68 L72.8,68 A20,20 0 0,1 35.2,68 Z" />
+    <!-- punto de señal -->
+    <path
+        android:fillColor="#F2C14E"
+        android:pathData="M54,52 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+</vector>
