@@ -29,12 +29,11 @@ Consume la API pública del Servidor Ahgora (repo `taku`, `server/`):
 GET https://taku-server.vercel.app/api/alertas   →   { aviso, items: [{ matriz, zona{lat_min,lon_min,…}, nivel, tipo, mensaje, fecha, laboratorio, demostracion }] }
 ```
 
-La app no necesita clave y solo lee avisos aprobados de muestras públicas. Acepta además campos opcionales que
-el servidor puede agregar sin romper nada (contrato de la guía, sección 09):
+La app no necesita clave y solo lee avisos aprobados de muestras públicas. Usa el contrato de la guía (sección 09):
 
-- `id` y `version`: hoy la app deriva un id estable del contenido. Con un id del servidor, las rectificaciones se enlazan con exactitud.
-- `certeza` (`cribado` | `en_verificacion` | `confirmado`) y `retirado: true`.
-- `POST /api/reportes` para los reportes comunitarios. Mientras no exista, los reportes quedan guardados y se reintentan.
+- `id` y `version` del servidor: una versión más antigua nunca reemplaza a una nueva. Si el servidor no los enviara, la app deriva un id estable del contenido.
+- `certeza` (`cribado` | `en_verificacion` | `confirmado`) y `retirado: true` para quitar un aviso de la lista vigente.
+- `POST /api/reportes` para los reportes comunitarios. Sin conexión, quedan guardados y se reintentan.
 
 ## Compilar y ejecutar
 

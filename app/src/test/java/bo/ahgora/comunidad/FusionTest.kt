@@ -80,6 +80,29 @@ class FusionTest {
     }
 
     @Test
+    fun contrato_con_id_version_y_retiro_del_servidor() {
+        val api = AhgoraApi()
+        fun leer(json: String) = api.json.decodeFromString(AlertasResponse.serializer(), json)
+            .items.mapNotNull { AhgoraApi.aEntrante(it, 0L) }
+        val zona = """"zona":{"lat_min":-15.5,"lon_min":-67.9,"lat_max":-15.4,"lon_max":-67.8}"""
+        val v1 = leer("""{"items":[{"id":"av-1","version":1,"matriz":"sedimento",$zona,"certeza":"cribado","tipo":"aviso_cribado","mensaje":"m","fecha":"2026-11-24T16:20:00Z"}]}""")
+        val v2 = leer("""{"items":[{"id":"av-1","version":2,"matriz":"sedimento",$zona,"certeza":"confirmado","tipo":"aviso_cribado","mensaje":"m","fecha":"2026-11-24T16:20:00Z","laboratorio":"Lab"}]}""")
+        val v3 = leer("""{"items":[{"id":"av-1","version":3,"matriz":"sedimento",$zona,"retirado":true,"fecha":"2026-11-25T01:21:13Z"}]}""")
+
+        val r1 = Fusion.fusionar(emptyList(), v1, S, 10, true)
+        assertEquals("av-1", r1.nuevos.single().id)
+        val r2 = Fusion.fusionar(r1.guardar, v2, S, 20, true)
+        assertEquals(EstadoAviso.CONFIRMADO, r2.actualizados.single().estado)
+        assertEquals(2, r2.actualizados.single().version)
+        // Respuesta vieja que llega tarde: no reemplaza a la versión 2.
+        assertTrue(Fusion.fusionar(r2.guardar, v1, S, 25, true).guardar.isEmpty())
+        val r3 = Fusion.fusionar(r2.guardar, v3, S, 30, true)
+        val retirado = r3.retirados.single()
+        assertTrue(retirado.retirado)
+        assertEquals(EstadoAviso.CONFIRMADO, retirado.estado) // conserva el último estado conocido
+    }
+
+    @Test
     fun json_real_de_api_alertas() {
         val api = AhgoraApi()
         val texto = """
