@@ -99,7 +99,7 @@ fun TituloSeccion(texto: String, modifier: Modifier = Modifier) {
 fun AvisoTarjeta(aviso: AvisoEntity, miCelda: Celda?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val p = Presentacion.de(aviso)
     val relacion = Formato.relacion(aviso.celda, miCelda)
-    val fecha = Formato.fechaCorta(aviso.publicadoEn)
+    val fecha = Formato.haceCuantoPublicado(aviso.publicadoEn)
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -107,7 +107,7 @@ fun AvisoTarjeta(aviso: AvisoEntity, miCelda: Celda?, onClick: () -> Unit, modif
         modifier = modifier.fillMaxWidth().heightIn(min = 48.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = buildString {
-                    append("${p.etiqueta}. ${Textos.titulo(aviso)}. $relacion. Publicado el $fecha.")
+                    append("${p.etiqueta}. ${Textos.titulo(aviso)}. $relacion. $fecha.")
                     if (!aviso.leido) append(" Nuevo.")
                     if (aviso.esEjemplo) append(" Es un ejemplo.")
                 }
@@ -125,7 +125,7 @@ fun AvisoTarjeta(aviso: AvisoEntity, miCelda: Celda?, onClick: () -> Unit, modif
                     Text(relacion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            if (aviso.retirado) "Cambió el ${Formato.fechaCorta(aviso.retiradoEn ?: aviso.actualizadoEn)}" else "Publicado: $fecha",
+                            if (aviso.retirado) "Cambió el ${Formato.fechaCorta(aviso.retiradoEn ?: aviso.actualizadoEn)}" else fecha,
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         if (!aviso.leido) { Spacer(Modifier.width(10.dp)); PuntoNuevo() }
@@ -148,32 +148,34 @@ fun EstadoDatos(
     onActualizar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val (icono, titulo, color, fondo) = when {
-        sincronizando -> Cuatro(Icons.Outlined.Sync, "Actualizando avisos…", MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)
-        !enLinea -> Cuatro(Icons.Outlined.CloudOff, "Sin conexión", Paleta.Ambar, Paleta.AmbarFondo)
-        else -> Cuatro(Icons.Outlined.CloudDone, "Conectado", MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)
+    // Una sola línea: distingue copia guardada de publicación reciente sin llenar la pantalla.
+    val (icono, color, fondo) = when {
+        sincronizando -> Triple(Icons.Outlined.Sync, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)
+        !enLinea -> Triple(Icons.Outlined.CloudOff, Paleta.Ambar, Paleta.AmbarFondo)
+        else -> Triple(Icons.Outlined.CloudDone, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.surfaceVariant)
     }
-    val detalle = when {
-        ultimaSync == null && !enLinea -> "Todavía faltan avisos por descargar. Se intentará al volver la señal."
-        ultimaSync == null -> "Aún no se descargaron avisos del servidor."
-        !enLinea -> "Mostrando avisos guardados el ${Formato.fechaHora(ultimaSync)}."
-        else -> "Última actualización: ${Formato.fechaHora(ultimaSync)} (${Formato.haceCuanto(ultimaSync)})."
+    val texto = when {
+        sincronizando -> "Actualizando…"
+        !enLinea && ultimaSync == null -> "Sin señal. Faltan avisos por bajar."
+        !enLinea -> "Sin señal · guardado ${Formato.haceCuanto(ultimaSync!!)}"
+        ultimaSync == null -> "Todavía no se bajaron avisos."
+        else -> "Actualizado ${Formato.haceCuanto(ultimaSync)}"
     }
     Surface(color = fondo, shape = RoundedCornerShape(12.dp), modifier = modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = 12.dp, top = 6.dp, bottom = 6.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (sincronizando) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = color)
-            else Icon(icono, contentDescription = null, tint = color)
+        Row(Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 4.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (sincronizando) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = color)
+            else Icon(icono, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f).clearAndSetSemantics { contentDescription = "$titulo. $detalle" }) {
-                Text(titulo, style = MaterialTheme.typography.labelLarge, color = color)
-                Text(detalle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-            }
+            Text(
+                texto, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f).clearAndSetSemantics {
+                    contentDescription = texto + (ultimaSync?.let { ". Última actualización: ${Formato.fechaHora(it)}" } ?: "")
+                },
+            )
             if (enLinea && !sincronizando) TextButton(onClick = onActualizar, modifier = Modifier.heightIn(min = 48.dp)) { Text("Actualizar") }
         }
     }
 }
-
-private data class Cuatro<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 
 /** Recuadro informativo (menta) como en la guía. */
 @Composable

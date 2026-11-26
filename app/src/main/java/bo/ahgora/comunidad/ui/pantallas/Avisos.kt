@@ -16,20 +16,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.SupportAgent
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,17 +55,14 @@ import bo.ahgora.comunidad.ui.componentes.SelloEjemplo
 import bo.ahgora.comunidad.ui.componentes.TituloSeccion
 import bo.ahgora.comunidad.ui.theme.Paleta
 
-enum class FiltroZona(val etiqueta: String) { MI_ZONA("Mi zona"), CERCA("Mi zona y vecinas"), TODOS("Todos") }
-
-/** Avisos: historial y cambios de estado fechados (guía, sección 04). */
+/** Avisos: primero los de mi comunidad, luego los de cerca. Los antiguos, a un toque (guía, sección 04). */
 @Composable
 fun PantallaAvisos(vm: AhgoraViewModel, onAbrirAviso: (String) -> Unit) {
     val ajustes by vm.ajustes.collectAsStateWithLifecycle()
     val avisos by vm.avisos.collectAsStateWithLifecycle()
     val enLinea by vm.enLinea.collectAsStateWithLifecycle()
     val sincronizando by vm.sincronizando.collectAsStateWithLifecycle()
-    var filtro by rememberSaveable { mutableStateOf(FiltroZona.CERCA) }
-    var verHistorial by rememberSaveable { mutableStateOf(false) }
+    var verAntiguos by rememberSaveable { mutableStateOf(false) }
     val celda = ajustes.celda
 
     val lista = avisos
@@ -78,54 +70,38 @@ fun PantallaAvisos(vm: AhgoraViewModel, onAbrirAviso: (String) -> Unit) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         return
     }
-    val enFiltro = lista.filter { a ->
-        when (filtro) {
-            FiltroZona.MI_ZONA -> celda != null && a.celda == celda
-            FiltroZona.CERCA -> celda != null && a.celda.distancia(celda) <= 1
-            FiltroZona.TODOS -> true
-        }
-    }
-    val vigentes = enFiltro.filter { !it.retirado }
-        .sortedWith(compareBy<AvisoEntity> { it.leido }.thenByDescending { it.publicadoEn })
-    val historial = enFiltro.filter { it.retirado }.sortedByDescending { it.retiradoEn ?: it.actualizadoEn }
+    val orden = compareBy<AvisoEntity> { it.leido }.thenByDescending { it.publicadoEn }
+    val vigentes = lista.filter { !it.retirado }
+    val mios = vigentes.filter { celda != null && it.celda == celda }.sortedWith(orden)
+    val cerca = vigentes.filter { celda != null && it.celda.distancia(celda) == 1 }.sortedWith(orden)
+    val antiguos = lista.filter { it.retirado && celda != null && it.celda.distancia(celda) <= 1 }
+        .sortedByDescending { it.retiradoEn ?: it.actualizadoEn }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
-        item { EstadoDatos(enLinea, ajustes.ultimaSincronizacion, sincronizando, onActualizar = { vm.sincronizar() }) }
-        item {
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FiltroZona.entries.forEach { f ->
-                    FilterChip(
-                        selected = filtro == f, onClick = { filtro = f }, label = { Text(f.etiqueta) },
-                        leadingIcon = if (filtro == f) { { Icon(Icons.Outlined.Check, null, Modifier.size(18.dp)) } } else null,
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    )
-                }
-            }
-        }
-        item { TituloSeccion("Vigentes (${vigentes.size})") }
-        if (vigentes.isEmpty()) item { SinAvisos(ajustes.ultimaSincronizacion) }
-        items(vigentes, key = { it.id }) { a -> AvisoTarjeta(a, celda, onClick = { onAbrirAviso(a.id) }) }
+        item { TituloSeccion("En ${ajustes.nombreZona ?: "tu comunidad"}") }
+        if (mios.isEmpty()) item { SinAvisos(ajustes.ultimaSincronizacion) }
+        items(mios, key = { it.id }) { a -> AvisoTarjeta(a, celda, onClick = { onAbrirAviso(a.id) }) }
 
-        item {
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Outlined.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Actualizados o retirados (${historial.size})", style = MaterialTheme.typography.titleSmall)
-                    Text("Avisos que cambiaron o ya no están vigentes.", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Switch(checked = verHistorial, onCheckedChange = { verHistorial = it })
-            }
+        if (cerca.isNotEmpty()) {
+            item { TituloSeccion("Comunidades vecinas") }
+            items(cerca, key = { it.id }) { a -> AvisoTarjeta(a, celda, onClick = { onAbrirAviso(a.id) }) }
         }
-        if (verHistorial) items(historial, key = { "h-" + it.id }) { a -> AvisoTarjeta(a, celda, onClick = { onAbrirAviso(a.id) }) }
+
+        if (antiguos.isNotEmpty()) {
+            item {
+                TextButton(onClick = { verAntiguos = !verAntiguos }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Icon(Icons.Outlined.History, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (verAntiguos) "Ocultar avisos antiguos" else "Ver avisos antiguos o cambiados (${antiguos.size})")
+                }
+            }
+            if (verAntiguos) items(antiguos, key = { "h-" + it.id }) { a -> AvisoTarjeta(a, celda, onClick = { onAbrirAviso(a.id) }) }
+        }
+        item { EstadoDatos(enLinea, ajustes.ultimaSincronizacion, sincronizando, onActualizar = { vm.sincronizar() }) }
     }
 }
 
@@ -183,12 +159,8 @@ fun PantallaDetalleAviso(vm: AhgoraViewModel, id: String, onAbrirAviso: (String)
         }
 
         Seccion("Qué pasó") {
-            Text(Textos.quePaso(a), style = MaterialTheme.typography.bodyLarge)
-            if (a.mensaje.isNotBlank() && a.mensaje.trim() != Textos.quePaso(a)) {
-                Spacer(Modifier.size(8.dp))
-                Text("Mensaje aprobado para la zona:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("«${a.mensaje}»", style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
-            }
+            // Si el responsable escribió un mensaje, ese es el que se lee; si no, el texto estándar.
+            Text(a.mensaje.ifBlank { Textos.quePaso(a) }, style = MaterialTheme.typography.bodyLarge)
         }
         Seccion("Qué puedes hacer") {
             Text(Textos.queHacer(a), style = MaterialTheme.typography.bodyLarge)
@@ -196,31 +168,26 @@ fun PantallaDetalleAviso(vm: AhgoraViewModel, id: String, onAbrirAviso: (String)
             OutlinedButton(onClick = onContacto, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                 Icon(Icons.Outlined.SupportAgent, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Ver contacto oficial de la zona")
+                Text("Preguntar al contacto oficial")
             }
         }
         Seccion("Qué se analizó") {
-            Text(Textos.matriz(a.matriz).replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.titleSmall)
-            Text(Textos.queSeAnalizo(a.matriz), style = MaterialTheme.typography.bodyMedium)
+            Text(Textos.queSeAnalizo(a.matriz), style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.size(6.dp))
             Text(Textos.alcance(a), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Seccion("Fechas") {
-            Dato("Publicado", Formato.fechaHora(a.publicadoEn))
-            Dato("Última actualización", Formato.fechaHora(a.actualizadoEn))
-            Dato("Guardado en este teléfono", Formato.fechaHora(a.descargadoEn))
-            Dato("Versión del aviso", a.version.toString())
+        if (a.esEjemplo) {
+            Text(
+                "Este es un aviso de EJEMPLO. No es real.",
+                style = MaterialTheme.typography.bodyLarge, color = Paleta.Ambar, fontWeight = FontWeight.Bold,
+            )
         }
-        Seccion("Fuente del aviso") {
-            Text(Textos.entidad(a), style = MaterialTheme.typography.bodyMedium)
-            if (a.esEjemplo) {
-                Spacer(Modifier.size(6.dp))
-                Text(
-                    "Este es un aviso de EJEMPLO para demostración. No describe un lugar ni una muestra real.",
-                    style = MaterialTheme.typography.bodyMedium, color = Paleta.Ambar, fontWeight = FontWeight.Bold,
-                )
-            }
-        }
+        // Fuente y fechas en letra pequeña: están, pero no distraen.
+        Text(
+            Textos.entidad(a) + " " + Formato.haceCuantoPublicado(a.publicadoEn) + "." +
+                (if (a.version > 1) " Cambió el ${Formato.fechaCorta(a.actualizadoEn)}." else ""),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Text(Textos.PRIMERA_SENAL, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -237,13 +204,5 @@ private fun Seccion(titulo: String, contenido: @Composable () -> Unit) {
                 modifier = Modifier.semantics { heading() }.padding(bottom = 6.dp))
             contenido()
         }
-    }
-}
-
-@Composable
-private fun Dato(etiqueta: String, valor: String) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp).semantics(mergeDescendants = true) {}) {
-        Text(etiqueta, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-        Text(valor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
     }
 }

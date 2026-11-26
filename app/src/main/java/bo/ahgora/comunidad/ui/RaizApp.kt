@@ -74,8 +74,8 @@ private val PESTANAS = listOf(
 )
 
 private val TITULOS = mapOf(
-    Rutas.INICIO to "Ahgora", Rutas.AVISOS to "Avisos de la zona", Rutas.MAPA to "Mapa de zonas",
-    Rutas.AYUDA to "Ayuda", Rutas.DETALLE to "Detalle del aviso", Rutas.ZONA to "Cambiar zona",
+    Rutas.INICIO to "Ahgora", Rutas.AVISOS to "Avisos", Rutas.MAPA to "Mapa",
+    Rutas.AYUDA to "Ayuda", Rutas.DETALLE to "Aviso", Rutas.ZONA to "Cambiar comunidad",
     Rutas.PREFERENCIAS to "Preferencias", Rutas.REPORTE to "Reportar algo",
 )
 
@@ -83,6 +83,7 @@ private val TITULOS = mapOf(
 @Composable
 fun RaizApp(vm: AhgoraViewModel, avisoDesdeNotificacion: StateFlow<String?>, onAvisoAbierto: () -> Unit) {
     val ajustes by vm.ajustes.collectAsStateWithLifecycle()
+    // La comunidad ya viene fijada (Alcoche): la bienvenida es una sola pantalla.
     if (!ajustes.bienvenidaHecha || ajustes.celda == null) {
         PantallaBienvenida(vm)
         return
@@ -157,6 +158,7 @@ fun RaizApp(vm: AhgoraViewModel, avisoDesdeNotificacion: StateFlow<String?>, onA
                         vm,
                         onAbrirAviso = { nav.navigate(Rutas.detalle(it)) },
                         onVerAvisos = { irAPestana(nav, Rutas.AVISOS) },
+                        onVerMapa = { irAPestana(nav, Rutas.MAPA) },
                         onCambiarZona = { nav.navigate(Rutas.ZONA) },
                         onAyuda = { irAPestana(nav, Rutas.AYUDA) },
                         onReportar = { nav.navigate(Rutas.REPORTE) },

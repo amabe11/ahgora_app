@@ -16,29 +16,31 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Campaign
-import androidx.compose.material.icons.outlined.EditLocationAlt
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.SupportAgent
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,17 +51,19 @@ import bo.ahgora.comunidad.ui.Presentacion
 import bo.ahgora.comunidad.ui.Textos
 import bo.ahgora.comunidad.ui.componentes.EstadoChip
 import bo.ahgora.comunidad.ui.componentes.EstadoDatos
-import bo.ahgora.comunidad.ui.componentes.FilaAccion
 import bo.ahgora.comunidad.ui.componentes.SelloEjemplo
-import bo.ahgora.comunidad.ui.componentes.TituloSeccion
 import bo.ahgora.comunidad.ui.theme.Paleta
 
-/** Inicio: qué pasó cerca de su zona, en qué estado está y a quién consultar (guía, sección 04). */
+/**
+ * Inicio (guía, sección 04): responde en pocos segundos qué pasó en mi comunidad, en qué estado está
+ * y qué hago. Poco texto, botones grandes.
+ */
 @Composable
 fun PantallaInicio(
     vm: AhgoraViewModel,
     onAbrirAviso: (String) -> Unit,
     onVerAvisos: () -> Unit,
+    onVerMapa: () -> Unit,
     onCambiarZona: () -> Unit,
     onAyuda: () -> Unit,
     onReportar: () -> Unit,
@@ -69,42 +73,30 @@ fun PantallaInicio(
     val enLinea by vm.enLinea.collectAsStateWithLifecycle()
     val sincronizando by vm.sincronizando.collectAsStateWithLifecycle()
     val celda = ajustes.celda
+    val nombre = ajustes.nombreZona ?: "tu comunidad"
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        EstadoDatos(enLinea, ajustes.ultimaSincronizacion, sincronizando, onActualizar = { vm.sincronizar() })
+        // Mi comunidad
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(
+                nombre, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f).semantics { heading() },
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+            TextButton(onClick = onCambiarZona, modifier = Modifier.heightIn(min = 48.dp)) { Text("Cambiar") }
+        }
 
         if (ajustes.modoDemo) {
             Surface(color = Paleta.AmbarFondo, contentColor = Paleta.Ambar, shape = RoundedCornerShape(12.dp)) {
                 Text(
-                    "Modo demostración: los avisos con el sello EJEMPLO no son reales.",
+                    "Modo de prueba: los avisos marcados EJEMPLO no son reales.",
                     style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(12.dp).fillMaxWidth(),
                 )
-            }
-        }
-
-        // Mi zona
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp))
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
-                    Text("Mi zona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(ajustes.nombreZona ?: "Sin zona", style = MaterialTheme.typography.titleLarge)
-                    celda?.let { Text(it.rangoLegible(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                }
-                OutlinedButton(onClick = onCambiarZona, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Icon(Icons.Outlined.EditLocationAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Cambiar")
-                }
             }
         }
 
@@ -120,42 +112,44 @@ fun PantallaInicio(
             compareBy<AvisoEntity> { it.leido }.thenByDescending { Presentacion.de(it).prioridad }.thenByDescending { it.actualizadoEn }
         ).firstOrNull()
 
-        TituloSeccion("Aviso vigente en tu zona")
-        if (destacado != null) AvisoDestacado(destacado, onAbrir = { onAbrirAviso(destacado.id) })
+        if (destacado != null) AvisoDestacado(destacado, otros = enMiZona.size - 1, onAbrir = { onAbrirAviso(destacado.id) }, onVerTodos = onVerAvisos)
         else SinAvisos(ajustes.ultimaSincronizacion)
 
-        // Resumen
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Resumen("En tu zona", enMiZona.size, Modifier.weight(1f), onVerAvisos)
-            Resumen("Zonas vecinas", vecinas.size, Modifier.weight(1f), onVerAvisos)
-        }
-        val sinLeer = vigentes.count { !it.leido && celda != null && it.celda.distancia(celda) <= 1 }
-        if (sinLeer > 0) {
-            Text(
-                "Tienes $sinLeer aviso(s) sin leer cerca de tu zona.",
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
-            )
+        if (vecinas.isNotEmpty()) {
+            Card(
+                onClick = onVerAvisos,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+            ) {
+                Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        if (vecinas.size == 1) "1 aviso en comunidades vecinas" else "${vecinas.size} avisos en comunidades vecinas",
+                        style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f),
+                    )
+                    Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.outline)
+                }
+            }
         }
 
-        TituloSeccion("Ayuda rápida")
-        FilaAccion(Icons.AutoMirrored.Outlined.HelpOutline, "¿Qué significa cada aviso?", "Cribado, análisis y resultado de laboratorio", onAyuda)
-        FilaAccion(Icons.Outlined.SupportAgent, "¿Dónde pregunto?", "Contacto oficial de tu zona", onAyuda)
-        FilaAccion(Icons.Outlined.Campaign, "Reportar algo que viste", "Agua turbia, peces muertos, nueva actividad…", onReportar)
+        // Tres botones grandes
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            BotonGrande(Icons.Outlined.Map, "Mapa", Modifier.weight(1f), onVerMapa)
+            BotonGrande(Icons.Outlined.SupportAgent, "Preguntar", Modifier.weight(1f), onAyuda)
+            BotonGrande(Icons.Outlined.Campaign, "Reportar", Modifier.weight(1f), onReportar)
+        }
 
-        Text(
-            Textos.PRIMERA_SENAL, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        EstadoDatos(enLinea, ajustes.ultimaSincronizacion, sincronizando, onActualizar = { vm.sincronizar() })
     }
 }
 
 @Composable
-private fun AvisoDestacado(a: AvisoEntity, onAbrir: () -> Unit) {
+private fun AvisoDestacado(a: AvisoEntity, otros: Int, onAbrir: () -> Unit, onVerTodos: () -> Unit) {
     val p = Presentacion.de(a)
     Card(
         onClick = onAbrir,
         colors = CardDefaults.cardColors(containerColor = p.fondo),
-        border = BorderStroke(1.dp, p.color.copy(alpha = 0.4f)),
+        border = BorderStroke(2.dp, p.color.copy(alpha = 0.5f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -165,19 +159,19 @@ private fun AvisoDestacado(a: AvisoEntity, onAbrir: () -> Unit) {
                 if (a.esEjemplo) SelloEjemplo()
             }
             Column(Modifier.semantics(mergeDescendants = true) {}) {
-                Text(Textos.titulo(a), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
-                Spacer(Modifier.size(4.dp))
                 Text(
-                    a.mensaje.ifBlank { Textos.quePaso(a) }, style = MaterialTheme.typography.bodyLarge,
+                    a.mensaje.ifBlank { Textos.quePaso(a) }, style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface, maxLines = 4, overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.size(6.dp))
-                Text(
-                    "Publicado: ${Formato.fechaHora(a.publicadoEn)}",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Spacer(Modifier.size(4.dp))
+                Text(Formato.haceCuantoPublicado(a.publicadoEn), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Button(onClick = onAbrir, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Ver detalle y qué hacer") }
+            Button(onClick = onAbrir, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("¿Qué hago?", style = MaterialTheme.typography.titleSmall) }
+            if (otros > 0) {
+                TextButton(onClick = onVerTodos, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(if (otros == 1) "Hay 1 aviso más aquí" else "Hay $otros avisos más aquí")
+                }
+            }
         }
     }
 }
@@ -185,37 +179,38 @@ private fun AvisoDestacado(a: AvisoEntity, onAbrir: () -> Unit) {
 @Composable
 fun SinAvisos(ultimaSync: Long?, modifier: Modifier = Modifier) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Presentacion.CONFIRMADO.fondo),
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(Modifier.padding(16.dp).semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Inbox, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(32.dp))
+            Icon(Icons.Outlined.TaskAlt, contentDescription = null, tint = Presentacion.CONFIRMADO.color, modifier = Modifier.size(36.dp))
             Spacer(Modifier.width(12.dp))
             Column {
-                Text(Textos.SIN_AVISOS, style = MaterialTheme.typography.titleSmall)
-                Text(
-                    if (ultimaSync != null) "Revisado con el servidor el ${Formato.fechaHora(ultimaSync)}."
-                    else "Revisa tu zona y vuelve a intentar cuando tengas señal.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text(Textos.SIN_AVISOS, style = MaterialTheme.typography.titleMedium)
+                if (ultimaSync == null) {
+                    Text("Se revisará cuando haya señal.", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun Resumen(titulo: String, n: Int, modifier: Modifier, onClick: () -> Unit) {
+private fun BotonGrande(icono: ImageVector, texto: String, modifier: Modifier, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        modifier = modifier.heightIn(min = 72.dp).semantics(mergeDescendants = true) {
-            contentDescription = "$titulo: $n avisos vigentes. Abrir avisos."
-        },
+        modifier = modifier.heightIn(min = 92.dp).semantics(mergeDescendants = true) { contentDescription = texto },
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text("$n", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.secondary)
-            Text(titulo, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(icono, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
+            Text(texto, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, maxLines = 1)
         }
     }
 }

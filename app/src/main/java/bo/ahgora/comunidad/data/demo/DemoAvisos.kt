@@ -19,10 +19,10 @@ object DemoAvisos {
     private const val HORA = 3_600_000L
     private const val DIA = 24 * HORA
 
-    const val TEXTO_CRIBADO = "Se tomaron muestras en tu zona y una necesita confirmación de laboratorio. " +
+    const val TEXTO_CRIBADO = "Se tomaron muestras en tu comunidad y una necesita confirmación de laboratorio. " +
         "No es un diagnóstico. Te avisaremos cuando haya resultado."
     const val TEXTO_EN_ANALISIS = "La muestra fue enviada al laboratorio. El resultado todavía está pendiente."
-    const val TEXTO_TRANQUILIZADOR = "El laboratorio analizó la muestra de tu zona y el resultado está por debajo " +
+    const val TEXTO_TRANQUILIZADOR = "El laboratorio analizó la muestra de tu comunidad y el resultado está por debajo " +
         "del umbral de referencia. El monitoreo continúa."
     const val TEXTO_CONFIRMADA = "Texto de demostración. En un caso real, las recomendaciones (consumo de pescado, " +
         "grupos vulnerables) las redacta y aprueba la autoridad de salud."
@@ -41,7 +41,7 @@ object DemoAvisos {
 
         val lista = mutableListOf(
             e("demo-2", 1, "cola", EstadoAviso.EN_ANALISIS, TipoAviso.AVISO_CRIBADO,
-                "Una muestra de cola de una zona vecina fue enviada al laboratorio. El resultado todavía está pendiente.",
+                "Una muestra de cola de una comunidad vecina fue enviada al laboratorio. El resultado todavía está pendiente.",
                 c(1, 0), 3 * DIA),
             e("demo-3", 1, "sedimento", EstadoAviso.CONFIRMADO, TipoAviso.TRANQUILIZADOR,
                 TEXTO_TRANQUILIZADOR, c(0, -1), 10 * DIA, lab = LAB),
@@ -60,7 +60,7 @@ object DemoAvisos {
         }
         if (paso.mod(PASOS) == 3) {
             lista += e("demo-6", 1, "cola", EstadoAviso.PENDIENTE, TipoAviso.AVISO_CRIBADO,
-                "Se tomó una muestra de cola en tu zona que requiere análisis de laboratorio. " +
+                "Se tomó una muestra de cola en tu comunidad que requiere análisis de laboratorio. " +
                     "Publicaremos una actualización cuando se revise el resultado.", celda, 0)
         }
         return lista

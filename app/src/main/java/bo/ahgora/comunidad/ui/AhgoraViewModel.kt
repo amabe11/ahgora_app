@@ -97,7 +97,11 @@ class AhgoraViewModel(app: Application) : AndroidViewModel(app) {
     fun completarBienvenida(notificaciones: Boolean) {
         c.ajustes.actualizar { it.copy(bienvenidaHecha = true, notificaciones = notificaciones) }
         SyncWorker.programarPeriodica(getApplication())
-        sincronizar(silencioso = true)
+        // La zona ya viene fijada (Alcoche): si nadie la cambió, los ejemplos todavía no existen.
+        viewModelScope.launch {
+            if (ajustes.value.modoDemo) repo.reiniciarDemo()
+            sincronizar(silencioso = true)
+        }
     }
 
     // ------------------------------------------------------------------ preferencias

@@ -13,10 +13,13 @@ enum class OrigenZona { GPS, LISTA }
 
 data class Ajustes(
     val bienvenidaHecha: Boolean = false,
-    /** Zona elegida: SOLO la celda de 0,1°, nunca la coordenada exacta. */
-    val celda: Celda? = null,
+    /**
+     * Zona elegida: SOLO la celda de 0,1°, nunca la coordenada exacta. Viene fijada en Alcoche
+     * (Caranavi), la localidad del piloto; la persona puede cambiarla por lista o por GPS.
+     */
+    val celda: Celda? = ZONA_POR_DEFECTO,
     val nombrePropio: String? = null,
-    val origenZona: OrigenZona? = null,
+    val origenZona: OrigenZona? = OrigenZona.LISTA,
     val notificaciones: Boolean = false,
     val escalaTexto: Float = 1f,
     val modoDemo: Boolean = BuildConfig.DEMO_MODE_DEFAULT,
@@ -31,6 +34,9 @@ data class Ajustes(
     val nombreZona: String?
         get() = nombrePropio?.takeIf { it.isNotBlank() } ?: celda?.let { Localidades.nombreSugerido(it) }
 }
+
+/** Alcoche, municipio de Caranavi: la comunidad del piloto. */
+val ZONA_POR_DEFECTO: Celda = Localidades.ALCOCHE.celda
 
 /** Preferencias en SharedPreferences expuestas como StateFlow (sin dependencias extra). */
 class AjustesStore(context: Context) {
@@ -48,9 +54,9 @@ class AjustesStore(context: Context) {
 
     private fun leer() = Ajustes(
         bienvenidaHecha = sp.getBoolean(K_BIENVENIDA, false),
-        celda = Celda.desdeClave(sp.getString(K_CELDA, null)),
+        celda = Celda.desdeClave(sp.getString(K_CELDA, null)) ?: ZONA_POR_DEFECTO,
         nombrePropio = sp.getString(K_NOMBRE, null),
-        origenZona = sp.getString(K_ORIGEN, null)?.let { runCatching { OrigenZona.valueOf(it) }.getOrNull() },
+        origenZona = sp.getString(K_ORIGEN, null)?.let { runCatching { OrigenZona.valueOf(it) }.getOrNull() } ?: OrigenZona.LISTA,
         notificaciones = sp.getBoolean(K_NOTIF, false),
         escalaTexto = sp.getFloat(K_ESCALA, 1f),
         modoDemo = sp.getBoolean(K_DEMO, BuildConfig.DEMO_MODE_DEFAULT),

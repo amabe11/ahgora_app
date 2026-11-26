@@ -46,6 +46,27 @@ class CeldaTest {
     }
 
     @Test
+    fun alcoche_es_la_zona_por_defecto() {
+        val alcoche = Localidades.ALCOCHE
+        assertEquals(alcoche.celda, bo.ahgora.comunidad.data.prefs.ZONA_POR_DEFECTO)
+        assertEquals("Alcoche", Localidades.nombreSugerido(alcoche.celda))
+        // Alcoche y Caranavi quedan en zonas distintas, y la lista empieza por Alcoche y sus vecinas.
+        assertTrue(alcoche.celda != Celda.de(-15.833, -67.567))
+        assertEquals("Alcoche", Localidades.cercaDeAlcoche.first().nombre)
+        assertEquals("Caranavi", Localidades.cercaDeAlcoche[1].nombre)
+    }
+
+    @Test
+    fun contexto_del_mapa_es_coherente() {
+        val ctx = bo.ahgora.comunidad.data.mapa.ContextoAlcoche
+        // Todos los peces de los tramos existen y el tramo medido tiene los 10 del estudio.
+        ctx.tramos.flatMap { it.peces }.forEach { assertNotNull(it, ctx.pez(it)) }
+        assertEquals(10, ctx.tramos.single { it.medido }.peces.size)
+        // El primer lugar es el río Coroico junto a Alcoche.
+        assertEquals(Localidades.ALCOCHE.celda, Celda.de(ctx.lugares.first().lat, ctx.lugares.first().lon))
+    }
+
+    @Test
     fun fechas_del_servidor() {
         assertNotNull(AhgoraApi.parseFecha("2026-11-24T16:20:00.000Z"))
         assertNotNull(AhgoraApi.parseFecha("2026-11-24T16:20"))

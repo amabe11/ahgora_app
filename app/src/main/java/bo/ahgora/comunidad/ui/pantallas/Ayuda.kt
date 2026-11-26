@@ -49,23 +49,17 @@ import bo.ahgora.comunidad.ui.componentes.TituloSeccion
 
 /** Preguntas breves (guía, sección 07 «Contenidos breves de educación»). Incluidas en la instalación. */
 private val PREGUNTAS = listOf(
-    "¿Qué es Ahgora?" to "Un sistema para saber qué muestras de tu zona necesitan revisión de mercurio en laboratorio y para " +
-        "avisarte, con mensajes revisados, en qué estado está cada caso.",
-    "¿Qué es un cribado?" to "Es una prueba rápida que se hace en el sitio para decidir qué muestras enviar primero al " +
-        "laboratorio. Da una primera señal, no un resultado final.",
-    "¿Qué es confirmar?" to "El laboratorio revisa la muestra con un método específico y emite un resultado. " +
-        "Se informa en la app cuando el responsable aprueba su publicación.",
-    "¿Qué se analizó?" to "Se tomó material del fondo del río o de la ribera (sedimento), residuos de la minería (cola) o " +
-        "pescado, según lo que indique el aviso. La ficha de cada aviso dice el tipo de muestra.",
-    "¿Por qué no se analiza el agua?" to "El mercurio que preocupa se acumula en el fondo del río y en los peces, no tanto en el " +
-        "agua. Por eso se revisan esas muestras.",
-    "¿Un aviso significa que estoy enfermo?" to "No. Un aviso describe una muestra de la zona, no a las personas. " +
-        "No es un diagnóstico. Las indicaciones de salud, si las hay, las aprueba la autoridad de salud.",
-    "¿Qué hago si tengo dudas?" to "Abre «Contacto oficial» en esta pantalla y consulta al canal de tu zona.",
-    "¿Funciona sin internet?" to "Sí. Los avisos, la ayuda y los contactos quedan guardados en el teléfono. Cuando vuelve la " +
-        "señal, la app descarga las novedades y quita los avisos retirados.",
-    "¿Qué datos guarda la app?" to "Solo tu zona aproximada (unos 11 km), tus preferencias y los avisos públicos. No pide " +
-        "cuenta, no guarda tu ubicación exacta y no envía datos tuyos al consultar avisos.",
+    "¿Qué es Ahgora?" to "Te avisa qué muestras de tu comunidad se revisan por mercurio y qué dijo el laboratorio.",
+    "¿Qué es una prueba rápida (cribado)?" to "Es una prueba que se hace en el río para decidir qué muestras llevar primero al " +
+        "laboratorio. Es una primera señal, no el resultado final.",
+    "¿Un aviso quiere decir que estoy enfermo?" to "No. El aviso habla de una muestra del río o de la tierra, no de las personas. " +
+        "Las indicaciones de salud solo las da la autoridad de salud.",
+    "¿Puedo comer pescado?" to "Comer pescado es bueno. Los peces que comen otros peces (surubí, bagre, blanquillo) suelen tener " +
+        "más mercurio; el sábalo, la yatorana y el pacú, menos. Mira la pestaña Peces del Mapa y pregunta en tu centro de salud.",
+    "¿Por qué no se analiza el agua?" to "El mercurio se junta en el fondo del río y en los peces, más que en el agua. " +
+        "Por eso se revisan esas muestras.",
+    "¿Funciona sin internet?" to "Sí. Los avisos, la ayuda y los contactos quedan guardados en el teléfono.",
+    "¿Qué datos guarda?" to "Solo tu comunidad y tus preferencias. No pide cuenta ni guarda dónde estás exactamente.",
 )
 
 @Composable
@@ -75,9 +69,23 @@ fun PantallaAyuda(vm: AhgoraViewModel, onPreferencias: () -> Unit, onReportar: (
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        TituloSeccion("¿Dónde pregunto?")
+        Contacto(
+            Icons.Outlined.SupportAgent, "Equipo Ahgora de la zona",
+            "El contacto de ${ajustes.nombreZona ?: "tu comunidad"} se acuerda con la comunidad al empezar el piloto. Aquí estará su teléfono.",
+        )
+        Contacto(
+            Icons.Outlined.HealthAndSafety, "Centro de salud de referencia",
+            "Para dudas de salud, acude a tu centro de salud. Las indicaciones sanitarias solo las da la autoridad de salud.",
+        )
+        Contacto(
+            Icons.Outlined.Groups, "Promotor o promotora de salud comunitaria",
+            "Si tu comunidad tiene promotor de salud, también puede orientarte sobre los avisos.",
+        )
+
         Nota("Lo más importante", "Un aviso es una ${Textos.PRIMERA_SENAL.replaceFirstChar { it.lowercase() }}")
 
-        TituloSeccion("Qué significa cada estado")
+        TituloSeccion("Qué quiere decir cada aviso")
         Presentacion.entries.forEach { p ->
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -91,27 +99,12 @@ fun PantallaAyuda(vm: AhgoraViewModel, onPreferencias: () -> Unit, onReportar: (
             }
         }
 
-        TituloSeccion("Contacto oficial de tu zona")
-        Contacto(
-            Icons.Outlined.SupportAgent, "Equipo Ahgora de la zona",
-            "El canal oficial se define con la comunidad al iniciar el piloto en ${ajustes.nombreZona ?: "tu zona"}. " +
-                "Aquí aparecerán su teléfono y horario.",
-        )
-        Contacto(
-            Icons.Outlined.HealthAndSafety, "Centro de salud de referencia",
-            "Para dudas de salud, acude a tu centro de salud. Las indicaciones sanitarias solo las da la autoridad de salud.",
-        )
-        Contacto(
-            Icons.Outlined.Groups, "Promotor o promotora de salud comunitaria",
-            "Si tu comunidad tiene promotor de salud, también puede orientarte sobre los avisos.",
-        )
-
         TituloSeccion("Preguntas frecuentes")
         PREGUNTAS.forEach { (q, r) -> Pregunta(q, r) }
 
         TituloSeccion("Participa y ajusta")
         FilaAccion(Icons.Outlined.Campaign, "Reportar algo que viste", "Ayuda a decidir dónde tomar muestras", onReportar)
-        FilaAccion(Icons.Outlined.Settings, "Preferencias", "Avisos, tamaño del texto, idioma, zona", onPreferencias)
+        FilaAccion(Icons.Outlined.Settings, "Preferencias", "Mensajes, letra grande, comunidad", onPreferencias)
     }
 }
 

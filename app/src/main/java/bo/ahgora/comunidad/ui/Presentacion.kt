@@ -67,7 +67,7 @@ enum class Presentacion(
 
 object Textos {
     const val PRIMERA_SENAL = "Primera señal, no un diagnóstico ni una prueba legal."
-    const val SIN_AVISOS = "Por ahora no hay avisos publicados para esta zona."
+    const val SIN_AVISOS = "Por ahora no hay avisos para tu comunidad."
 
     fun matriz(m: String): String = when (m.lowercase()) {
         "sedimento" -> "sedimento"
@@ -99,13 +99,12 @@ object Textos {
     }
 
     fun queHacer(a: AvisoEntity): String = when (Presentacion.de(a)) {
-        Presentacion.PENDIENTE -> "Consulta las novedades de tu zona o contacta al canal oficial. " +
-            "Te avisaremos cuando haya un resultado de laboratorio."
-        Presentacion.EN_ANALISIS -> "Espera la actualización: te avisaremos cuando haya resultado. Puedes consultar el " +
-            "canal de seguimiento de tu zona."
-        Presentacion.CONFIRMADO -> "El monitoreo continúa. Si tienes dudas, consulta el contacto oficial."
-        Presentacion.CONFIRMADO_INDICACIONES -> "Sigue solo las indicaciones aprobadas por la autoridad de salud que " +
-            "figuran en este aviso. Ante cualquier duda, consulta el contacto oficial."
+        Presentacion.PENDIENTE -> "Todavía no hay resultado. Te avisaremos cuando el laboratorio responda. " +
+            "Si tienes dudas, pregunta al contacto oficial."
+        Presentacion.EN_ANALISIS -> "Espera: te avisaremos cuando haya resultado. Si tienes dudas, pregunta al contacto oficial."
+        Presentacion.CONFIRMADO -> "Se seguirá revisando. Si tienes dudas, pregunta al contacto oficial."
+        Presentacion.CONFIRMADO_INDICACIONES -> "Sigue solo las indicaciones de la autoridad de salud que están en este aviso. " +
+            "Si tienes dudas, pregunta al contacto oficial."
         Presentacion.RETIRADO -> "Abre la versión vigente si está disponible."
     }
 
@@ -142,12 +141,17 @@ object Formato {
         }
     }
 
+    /** «Publicado hace 2 h» o «Publicado el 24 nov» (más fácil de leer que fecha y hora). */
+    fun haceCuantoPublicado(ms: Long, ahora: Long = System.currentTimeMillis()): String =
+        if (ahora - ms < 48 * 3_600_000L) "Publicado ${haceCuanto(ms, ahora)}"
+        else "Publicado el " + SimpleDateFormat("d MMM", es).format(Date(ms)).replace(".", "")
+
     /** Relación entre la zona del aviso y la de la persona. */
     fun relacion(celda: Celda, mia: Celda?): String {
         if (mia == null) return nombreZona(celda, null, null)
         return when (celda.distancia(mia)) {
-            0 -> "En tu zona"
-            1 -> "Zona vecina · ${nombreZona(celda, null, null)}"
+            0 -> "En tu comunidad"
+            1 -> nombreZona(celda, null, null).let { if (it.startsWith("Cerca de")) it else "Cerca · $it" }
             else -> {
                 val km = Localidades.distanciaKm(celda.latCentro, celda.lonCentro, mia.latCentro, mia.lonCentro)
                 "A unos ${(km / 5).roundToInt() * 5} km · ${nombreZona(celda, null, null)}"

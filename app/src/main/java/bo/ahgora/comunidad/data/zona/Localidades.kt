@@ -23,8 +23,16 @@ data class Localidad(
 
 object Localidades {
 
+    /**
+     * Localidad del piloto: Alcoche, cantón del municipio de Caranavi, a orillas del río Coroico
+     * (ruta Caranavi – Guanay). Coordenadas del poblado según OpenStreetMap / GeoNames 3924291.
+     * Es la comunidad que la app trae elegida por defecto.
+     */
+    val ALCOCHE = Localidad("Alcoche", "Caranavi, La Paz", -15.7511, -67.6748)
+
     val todas: List<Localidad> = listOf(
-        // Norte de La Paz: cuencas de los ríos Kaka, Tipuani, Mapiri y Beni
+        ALCOCHE,
+        // Norte de La Paz: cuencas de los ríos Coroico, Kaka, Tipuani, Mapiri y Beni
         Localidad("Guanay", "Larecaja, La Paz", -15.498, -67.883),
         Localidad("Teoponte", "Larecaja, La Paz", -15.497, -67.820),
         Localidad("Tipuani", "Larecaja, La Paz", -15.545, -67.985),
@@ -54,6 +62,11 @@ object Localidades {
         Localidad("Santa Cruz de la Sierra", "Andrés Ibáñez, Santa Cruz", -17.783, -63.182),
         Localidad("Tarija", "Cercado, Tarija", -21.536, -64.730),
     ).sortedBy { it.nombre }
+
+    /** Lista ordenada de la más cercana a la más lejana de Alcoche: las comunidades vecinas aparecen primero. */
+    val cercaDeAlcoche: List<Localidad> by lazy {
+        todas.sortedBy { distanciaKm(ALCOCHE.lat, ALCOCHE.lon, it.lat, it.lon) }
+    }
 
     /** Localidad más cercana al centro de la celda y su distancia aproximada en km. */
     fun masCercana(celda: Celda): Pair<Localidad, Double> =
