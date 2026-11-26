@@ -98,6 +98,38 @@ class AhgoraApi(
         }
     }
 
+    // ------------------------------------------------------------------ modo técnico (con clave del equipo)
+
+    /** Resultado de comprobar la clave del equipo contra el servidor. */
+    enum class Clave { VALIDA, INVALIDA, SIN_RESPUESTA }
+
+    /** `GET /api/datos?coleccion=muestras&limit=1` con `x-ahg-key`: 200 = clave válida, 401 = no. */
+    suspend fun verificarClave(baseUrl: String, clave: String): Clave = withContext(Dispatchers.IO) {
+        val req = Request.Builder().url(url(baseUrl, "api/datos?coleccion=muestras&limit=1"))
+            .header("x-ahg-key", clave).get().build()
+        runCatching {
+            client.newCall(req).execute().use { res ->
+                when {
+                    res.isSuccessful -> Clave.VALIDA
+                    res.code == 401 || res.code == 403 -> Clave.INVALIDA
+                    else -> Clave.SIN_RESPUESTA
+                }
+            }
+        }.getOrDefault(Clave.SIN_RESPUESTA)
+    }
+
+    /** `POST /api/sync` con `x-ahg-key`: inserta o actualiza por `codigo` (repetir no duplica). */
+    suspend fun sincronizarMuestras(baseUrl: String, clave: String, muestras: List<MuestraDto>): SyncResponse =
+        withContext(Dispatchers.IO) {
+            val body = json.encodeToString(SyncRequest(muestras = muestras)).toRequestBody("application/json".toMediaType())
+            val req = Request.Builder().url(url(baseUrl, "api/sync")).header("x-ahg-key", clave).post(body).build()
+            client.newCall(req).execute().use { res ->
+                if (res.code == 401) throw IOException("La clave del equipo ya no es válida")
+                if (!res.isSuccessful) throw IOException("El servidor respondió ${res.code}")
+                json.decodeFromString<SyncResponse>(res.body?.string().orEmpty())
+            }
+        }
+
     private fun url(base: String, ruta: String) = (if (base.endsWith("/")) base else "$base/") + ruta
 
     companion object {

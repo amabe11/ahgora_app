@@ -8,6 +8,9 @@ import bo.ahgora.comunidad.data.Ubicador
 import bo.ahgora.comunidad.data.local.AhgoraDatabase
 import bo.ahgora.comunidad.data.prefs.AjustesStore
 import bo.ahgora.comunidad.data.remote.AhgoraApi
+import bo.ahgora.comunidad.data.tecnico.LectorBluetooth
+import bo.ahgora.comunidad.data.tecnico.SesionStore
+import bo.ahgora.comunidad.data.tecnico.TecnicoRepository
 import bo.ahgora.comunidad.notif.Notificador
 import bo.ahgora.comunidad.sync.SyncWorker
 
@@ -19,6 +22,10 @@ class Contenedor(context: Context) {
     val repositorio = AhgoraRepository(db, api, ajustes)
     val conexion = Conexion(context)
     val ubicador = Ubicador(context)
+    // Modo técnico
+    val sesion = SesionStore(context)
+    val tecnico = TecnicoRepository(db.muestras(), api, ajustes, sesion)
+    val lector = LectorBluetooth(context)
 }
 
 class AhgoraApp : Application() {
@@ -29,7 +36,7 @@ class AhgoraApp : Application() {
         super.onCreate()
         contenedor = Contenedor(this)
         Notificador.crearCanal(this)
-        if (contenedor.ajustes.actual.bienvenidaHecha) {
+        if (contenedor.ajustes.actual.bienvenidaHecha || contenedor.sesion.actual != null) {
             SyncWorker.programarPeriodica(this)
         }
     }

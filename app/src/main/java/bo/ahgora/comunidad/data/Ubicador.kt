@@ -61,6 +61,42 @@ class Ubicador(private val context: Context) {
         return Resultado.SinSenal
     }
 
+    /** Punto exacto: SOLO para el modo técnico (guía, sección 02: «ubicación precisa si fue autorizada»). */
+    data class Punto(val lat: Double, val lon: Double, val precisionM: Double?)
+
+    sealed interface ResultadoPunto {
+        data class Ok(val punto: Punto) : ResultadoPunto
+        data object SinPermiso : ResultadoPunto
+        data object UbicacionApagada : ResultadoPunto
+        data object SinSenal : ResultadoPunto
+    }
+
+    /** Lectura nueva del GPS (sin usar posiciones viejas: la muestra necesita el punto donde se tomó). */
+    @SuppressLint("MissingPermission")
+    suspend fun obtenerPunto(timeoutMs: Long = 60_000): ResultadoPunto {
+        if (!tienePermiso()) return ResultadoPunto.SinPermiso
+        val lm = context.getSystemService(LocationManager::class.java)
+        if (!LocationManagerCompat.isLocationEnabled(lm)) return ResultadoPunto.UbicacionApagada
+        val proveedores = buildList {
+            if (tieneFino()) add(LocationManager.GPS_PROVIDER)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(LocationManager.FUSED_PROVIDER)
+            add(LocationManager.NETWORK_PROVIDER)
+        }.filter { runCatching { lm.isProviderEnabled(it) }.getOrDefault(false) }
+        // Una posición de hace menos de 2 minutos sirve (el técnico está en el mismo sitio).
+        val reciente = proveedores.mapNotNull { runCatching { lm.getLastKnownLocation(it) }.getOrNull() }
+            .filter { System.currentTimeMillis() - it.time < 2 * 60_000 }
+            .minByOrNull { it.accuracy }
+        if (reciente != null) return ResultadoPunto.Ok(reciente.aPunto())
+        val porProveedor = timeoutMs / proveedores.size.coerceAtLeast(1)
+        for (p in proveedores) {
+            val loc = withTimeoutOrNull(porProveedor) { lecturaActual(lm, p) }
+            if (loc != null) return ResultadoPunto.Ok(loc.aPunto())
+        }
+        return ResultadoPunto.SinSenal
+    }
+
+    private fun Location.aPunto() = Punto(latitude, longitude, if (hasAccuracy()) accuracy.toDouble() else null)
+
     @SuppressLint("MissingPermission")
     private suspend fun lecturaActual(lm: LocationManager, proveedor: String): Location? =
         suspendCancellableCoroutine { cont ->

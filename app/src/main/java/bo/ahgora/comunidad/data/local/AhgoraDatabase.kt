@@ -1,7 +1,10 @@
 package bo.ahgora.comunidad.data.local
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Dao
+import bo.ahgora.comunidad.data.tecnico.MuestraDao
+import bo.ahgora.comunidad.data.tecnico.MuestraEntity
 import androidx.room.Database
 import androidx.room.Query
 import androidx.room.Room
@@ -55,11 +58,19 @@ class Convertidores {
     @TypeConverter fun estadoReporte(v: String): EstadoReporte = EstadoReporte.valueOf(v)
 }
 
-@Database(entities = [AvisoEntity::class, ReporteEntity::class], version = 1, exportSchema = true)
+// v2: tabla «muestras» del modo técnico. La migración automática solo agrega la tabla nueva:
+// los avisos y reportes guardados se conservan.
+@Database(
+    entities = [AvisoEntity::class, ReporteEntity::class, MuestraEntity::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 @TypeConverters(Convertidores::class)
 abstract class AhgoraDatabase : RoomDatabase() {
     abstract fun avisos(): AvisoDao
     abstract fun reportes(): ReporteDao
+    abstract fun muestras(): MuestraDao
 
     companion object {
         fun crear(context: Context): AhgoraDatabase =

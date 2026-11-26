@@ -50,6 +50,8 @@ import bo.ahgora.comunidad.ui.pantallas.PantallaPreferencias
 import bo.ahgora.comunidad.ui.pantallas.PantallaReporte
 import bo.ahgora.comunidad.ui.pantallas.PantallaZona
 import bo.ahgora.comunidad.ui.theme.Paleta
+import bo.ahgora.comunidad.ui.tecnico.TecnicoRaiz
+import bo.ahgora.comunidad.data.prefs.Perfil
 import kotlinx.coroutines.flow.StateFlow
 
 private object Rutas {
@@ -83,6 +85,11 @@ private val TITULOS = mapOf(
 @Composable
 fun RaizApp(vm: AhgoraViewModel, avisoDesdeNotificacion: StateFlow<String?>, onAvisoAbierto: () -> Unit) {
     val ajustes by vm.ajustes.collectAsStateWithLifecycle()
+    // Segundo perfil: técnico de campo, con su propio ingreso (guía, secciones 6.2 y 7.6).
+    if (ajustes.perfil == Perfil.TECNICO) {
+        TecnicoRaiz()
+        return
+    }
     // La comunidad ya viene fijada (Alcoche): la bienvenida es una sola pantalla.
     if (!ajustes.bienvenidaHecha || ajustes.celda == null) {
         PantallaBienvenida(vm)
@@ -167,7 +174,8 @@ fun RaizApp(vm: AhgoraViewModel, avisoDesdeNotificacion: StateFlow<String?>, onA
                 composable(Rutas.AVISOS) { PantallaAvisos(vm, onAbrirAviso = { nav.navigate(Rutas.detalle(it)) }) }
                 composable(Rutas.MAPA) { PantallaMapa(vm, onAbrirAviso = { nav.navigate(Rutas.detalle(it)) }) }
                 composable(Rutas.AYUDA) {
-                    PantallaAyuda(vm, onPreferencias = { nav.navigate(Rutas.PREFERENCIAS) }, onReportar = { nav.navigate(Rutas.REPORTE) })
+                    PantallaAyuda(vm, onPreferencias = { nav.navigate(Rutas.PREFERENCIAS) }, onReportar = { nav.navigate(Rutas.REPORTE) },
+                        onTecnico = { vm.irATecnico() })
                 }
                 composable(Rutas.DETALLE) { e ->
                     val id = e.arguments?.getString("id").orEmpty()

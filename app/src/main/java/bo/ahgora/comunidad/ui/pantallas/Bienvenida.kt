@@ -112,6 +112,9 @@ fun PantallaBienvenida(vm: AhgoraViewModel) {
             OutlinedButton(onClick = { vm.completarBienvenida(false) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
                 Text("Empezar sin mensajes")
             }
+            TextButton(onClick = { vm.irATecnico() }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text("Soy técnico de campo")
+            }
         }
     }
 }

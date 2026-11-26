@@ -22,6 +22,27 @@ Gold4Good Bolivia 2026 · Desafío ORO-4.1. Implementa la sección «Android Com
 | **Accesibilidad** | Estado = texto + ícono + color, áreas táctiles ≥ 48 dp, etiquetas para TalkBack y tamaño de texto propio (Normal / Grande / Muy grande). |
 | **Modo demostración** | Avisos rotulados **EJEMPLO** generados alrededor de la zona elegida, para mostrar la app sin servidor ni señal. En *Preferencias → Simular siguiente actualización* el caso avanza: pendiente → en análisis → confirmado → aviso nuevo, con notificación. |
 
+## Modo técnico (segundo usuario)
+
+Una sola app con dos perfiles (guía de la solución, secciones 6.2 y 7.6). Se entra desde la bienvenida («Soy técnico
+de campo») o desde **Ayuda → Modo técnico**.
+
+| Parte | Detalle |
+|---|---|
+| **Ingreso** | Usuario (nombre del técnico, queda como `responsable`) + **clave del equipo** (la `x-ahg-key` del Servidor Ahgora). La primera vez se comprueba con `GET /api/datos`; luego se puede entrar sin señal. La clave se guarda cifrada con el Android Keystore. «Probar sin clave» abre una sesión de demostración: sus muestras nunca salen del teléfono. |
+| **Nueva muestra (5 pasos)** | 1. Identificar: matriz (sedimento, cola, pescado), código automático para la etiqueta (`ALC-SED-261126-AM01`), GPS exacto (por defecto Alcoche), río (por defecto río Coroico) y foto. 2. Muestreo: porciones, profundidad, % fino; en pescado especie, talla y peso. 3. Procedimiento guiado de la sección 4.3 con temporizadores (15 min, 5 min, 2 min, 30 s). 4. Controles (blanco, cloro libre = 0, referencia blanca, pH) y lectura del lector: **Bluetooth**, escrita a mano o de demostración. 5. Resultado: semáforo (prioridad alta / verificar / prioridad baja / inválido), acción sugerida, etiqueta «CRIBADO — NO ES DIAGNÓSTICO NI EVIDENCIA LEGAL» y mensaje para la comunidad. |
+| **Muestras** | Historial con estado de envío, ficha completa, **cadena de custodia** (registrada → enviada al laboratorio), mapa de muestras y exportación **CSV** para el laboratorio. |
+| **Envío** | Todo se guarda primero en el teléfono (Room) y se envía a `POST /api/sync` con `x-ahg-key` al haber señal (también en segundo plano con WorkManager). Repetir no duplica: el servidor actualiza por `codigo`. Siempre `visibilidad: restringido`; publicar un aviso lo decide un responsable en Ahgora Web. |
+
+**Semáforo provisional.** ΔE = distancia entre la casilla de Hg sin usar y la reaccionada, normalizadas con la tarjeta
+blanca (reflectancia %). Umbrales 4 y 8 (bajos a propósito, sección 6.3). Mientras la curva no esté validada con el
+laboratorio (`Cribado.CALIBRACION_VALIDADA = false`) todo resultado va como demostración y no se convierte a mg/kg.
+
+**Lector por Bluetooth.** La app usa Bluetooth clásico (SPP) y espera, por línea, el mismo JSON que hoy sale por USB
+(`{"node_id":"AHG-SED-01","r":…,"g":…,"b":…,"c":…}`), promediando 10 lecturas. Al firmware le falta solo
+`BluetoothSerial SerialBT; SerialBT.begin("AHG-SED-01");` y `SerialBT.println(json)`. El lector se empareja antes
+desde los ajustes de Bluetooth del teléfono.
+
 ## Sobre los datos del mapa
 
 Los círculos de la pestaña **Mercurio** marcan **minería de oro reportada**, no mediciones: es donde es más probable
@@ -81,8 +102,10 @@ app/src/main/java/bo/ahgora/comunidad/
   data/remote/      Cliente de /api/alertas y /api/reportes (OkHttp + kotlinx.serialization)
   data/sync/        Fusion: reglas de versiones, retiros y duplicados (con pruebas)
   data/demo/        Avisos de demostración
+  data/tecnico/     Modo técnico: muestras (Room), sesión cifrada, lector Bluetooth, cribado y envío a /api/sync
   data/             Repositorio, conexión, ubicación única
   sync/             SyncWorker (WorkManager)
   notif/            Notificaciones genéricas
   ui/               Tema, presentación de estados, ViewModel y pantallas
+  ui/tecnico/       Ingreso, nueva muestra (5 pasos), muestras, mapa de muestras y cuenta
 ```

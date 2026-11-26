@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Archivos que la app comparte con otras apps: fotos (cámara) y CSV exportados del modo técnico. -->
+<paths>
+    <files-path name="fotos" path="fotos/" />
+    <cache-path name="exportes" path="exportes/" />
+</paths>

@@ -1,10 +1,5 @@
 package bo.ahgora.comunidad.ui.pantallas
 
-import android.content.Context
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.Typeface
-import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -79,6 +74,7 @@ import bo.ahgora.comunidad.data.zona.Localidades
 import bo.ahgora.comunidad.ui.AhgoraViewModel
 import bo.ahgora.comunidad.ui.Presentacion
 import bo.ahgora.comunidad.ui.componentes.AvisoTarjeta
+import bo.ahgora.comunidad.ui.componentes.etiquetaMapa
 import bo.ahgora.comunidad.ui.theme.Paleta
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -504,7 +500,7 @@ private fun dibujarMercurio(mv: MapView, mia: Celda, porCelda: Map<Celda, List<A
                 LadoEtiqueta.IZQUIERDA -> setAnchor(1.05f, Marker.ANCHOR_CENTER)
                 LadoEtiqueta.DERECHA -> setAnchor(-0.05f, Marker.ANCHOR_CENTER)
             }
-            icon = etiqueta(
+            icon = etiquetaMapa(
                 mv.context, "$ALERTA ${l.corto}", color.toArgb(), android.graphics.Color.WHITE,
                 conPunta = l.lado == LadoEtiqueta.ARRIBA,
             )
@@ -521,7 +517,7 @@ private fun dibujarMercurio(mv: MapView, mia: Celda, porCelda: Map<Celda, List<A
             position = GeoPoint(celda.latCentro, celda.lonCentro)
             // Encima del centro de la zona: así no tapa la etiqueta de la comunidad (que va debajo).
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            icon = etiqueta(
+            icon = etiquetaMapa(
                 mv.context, "$CAMPANA ${lista.size}", p.color.toArgb(),
                 android.graphics.Color.WHITE, borde = android.graphics.Color.WHITE,
             )
@@ -539,7 +535,7 @@ private fun dibujarPeces(mv: MapView, onTocar: (Seleccion) -> Unit) {
         mv.overlays.add(Marker(mv).apply {
             position = GeoPoint(t.lat, t.lon)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            icon = etiqueta(
+            icon = etiquetaMapa(
                 mv.context, "$PEZ ${t.nombre.substringBefore(" (")} · ${peces.size}",
                 ColoresMapa.Rio.toArgb(), android.graphics.Color.WHITE, borde = ColoresMapa.de(peor).toArgb(),
             )
@@ -563,54 +559,11 @@ private fun marcadorMiComunidad(
     return Marker(mv).apply {
         position = punto
         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_TOP)
-        icon = etiqueta(
+        icon = etiquetaMapa(
             mv.context, texto, Paleta.Petroleo.toArgb(), android.graphics.Color.WHITE, conPunta = false,
             borde = peor?.color?.toArgb() ?: android.graphics.Color.WHITE,
         )
         infoWindow = null
         setOnMarkerClickListener { _, _ -> onTocar(if (avisos.isEmpty()) Seleccion.MiComunidad else Seleccion.Avisos(mia)); true }
     }
-}
-
-/** Pastilla de texto para el mapa (se ve siempre, sin tener que tocar el marcador). */
-private fun etiqueta(
-    context: Context,
-    texto: String,
-    fondo: Int,
-    colorTexto: Int,
-    conPunta: Boolean = true,
-    borde: Int? = null,
-): BitmapDrawable {
-    val d = context.resources.displayMetrics.density
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        textSize = 13f * d
-        typeface = Typeface.DEFAULT_BOLD
-        color = colorTexto
-    }
-    val padH = 8f * d
-    val padV = 5f * d
-    val punta = if (conPunta) 7f * d else 0f
-    val ancho = paint.measureText(texto) + 2 * padH
-    val alto = paint.fontMetrics.let { it.descent - it.ascent } + 2 * padV
-    val trazo = if (borde != null) 3f * d else 0f
-    val bmp = android.graphics.Bitmap.createBitmap(
-        (ancho + 2 * trazo).toInt() + 1, (alto + punta + 2 * trazo).toInt() + 1, android.graphics.Bitmap.Config.ARGB_8888,
-    )
-    val c = android.graphics.Canvas(bmp)
-    val rect = RectF(trazo, trazo, trazo + ancho, trazo + alto)
-    if (borde != null) {
-        val pb = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = borde }
-        c.drawRoundRect(RectF(0f, 0f, ancho + 2 * trazo, alto + 2 * trazo), alto / 2 + trazo, alto / 2 + trazo, pb)
-    }
-    val pf = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = fondo }
-    c.drawRoundRect(rect, alto / 2, alto / 2, pf)
-    if (conPunta) {
-        val cx = trazo + ancho / 2
-        val path = android.graphics.Path().apply {
-            moveTo(cx - punta, rect.bottom - 1); lineTo(cx + punta, rect.bottom - 1); lineTo(cx, rect.bottom + punta); close()
-        }
-        c.drawPath(path, pf)
-    }
-    c.drawText(texto, trazo + padH, trazo + padV - paint.fontMetrics.ascent, paint)
-    return BitmapDrawable(context.resources, bmp)
 }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.SupportAgent
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -63,7 +64,7 @@ private val PREGUNTAS = listOf(
 )
 
 @Composable
-fun PantallaAyuda(vm: AhgoraViewModel, onPreferencias: () -> Unit, onReportar: () -> Unit) {
+fun PantallaAyuda(vm: AhgoraViewModel, onPreferencias: () -> Unit, onReportar: () -> Unit, onTecnico: () -> Unit) {
     val ajustes by vm.ajustes.collectAsStateWithLifecycle()
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -105,6 +106,7 @@ fun PantallaAyuda(vm: AhgoraViewModel, onPreferencias: () -> Unit, onReportar: (
         TituloSeccion("Participa y ajusta")
         FilaAccion(Icons.Outlined.Campaign, "Reportar algo que viste", "Ayuda a decidir dónde tomar muestras", onReportar)
         FilaAccion(Icons.Outlined.Settings, "Preferencias", "Mensajes, letra grande, comunidad", onPreferencias)
+        FilaAccion(Icons.Outlined.Science, "Modo técnico", "Solo para el equipo de campo. Pide usuario y clave.", onTecnico)
     }
 }
 

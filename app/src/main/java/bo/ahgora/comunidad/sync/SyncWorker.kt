@@ -24,9 +24,12 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
     override suspend fun doWork(): Result {
         val app = applicationContext as AhgoraApp
         val repo = app.contenedor.repositorio
+        // Modo técnico: enviar las muestras guardadas sin señal (guía, sección 2.3, paso 6).
+        val tecnico = app.contenedor.tecnico
+        val envio = if (tecnico.sesion.actual?.demostracion == false) tecnico.enviarPendientes() else null
         if (repo.ajustes.actual.celda == null) return Result.success()
         val r = repo.sincronizar()
-        if (!r.ok) return if (runAttemptCount < 5) Result.retry() else Result.failure()
+        if (!r.ok || envio?.ok == false) return if (runAttemptCount < 5) Result.retry() else Result.failure()
         Notificador.notificarCambios(applicationContext, r.cambiosCerca, repo.ajustes.actual.notificaciones)
         return Result.success()
     }

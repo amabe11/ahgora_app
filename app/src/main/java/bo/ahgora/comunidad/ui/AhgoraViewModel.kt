@@ -10,6 +10,7 @@ import bo.ahgora.comunidad.data.local.AvisoEntity
 import bo.ahgora.comunidad.data.local.ReporteEntity
 import bo.ahgora.comunidad.data.prefs.Ajustes
 import bo.ahgora.comunidad.data.prefs.OrigenZona
+import bo.ahgora.comunidad.data.prefs.Perfil
 import bo.ahgora.comunidad.data.zona.Celda
 import bo.ahgora.comunidad.notif.Notificador
 import bo.ahgora.comunidad.sync.SyncWorker
@@ -103,6 +104,11 @@ class AhgoraViewModel(app: Application) : AndroidViewModel(app) {
             sincronizar(silencioso = true)
         }
     }
+
+    // ------------------------------------------------------------------ perfil
+
+    /** Abre el perfil técnico (pide usuario y clave si no hay sesión). */
+    fun irATecnico() = c.ajustes.actualizar { it.copy(perfil = Perfil.TECNICO) }
 
     // ------------------------------------------------------------------ preferencias
 

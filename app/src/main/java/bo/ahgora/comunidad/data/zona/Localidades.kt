@@ -68,6 +68,10 @@ object Localidades {
         todas.sortedBy { distanciaKm(ALCOCHE.lat, ALCOCHE.lon, it.lat, it.lon) }
     }
 
+    /** Localidad más cercana a un punto exacto y su distancia en km (modo técnico). */
+    fun masCercanaA(lat: Double, lon: Double): Pair<Localidad, Double> =
+        todas.map { it to distanciaKm(lat, lon, it.lat, it.lon) }.minBy { it.second }
+
     /** Localidad más cercana al centro de la celda y su distancia aproximada en km. */
     fun masCercana(celda: Celda): Pair<Localidad, Double> =
         todas.map { it to distanciaKm(celda.latCentro, celda.lonCentro, it.lat, it.lon) }

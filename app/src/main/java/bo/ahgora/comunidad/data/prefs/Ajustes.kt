@@ -11,8 +11,12 @@ import kotlinx.coroutines.flow.asStateFlow
 
 enum class OrigenZona { GPS, LISTA }
 
+/** Las dos personas que usan la app (guía, sección 7.6: una sola app con dos perfiles). */
+enum class Perfil { COMUNIDAD, TECNICO }
+
 data class Ajustes(
     val bienvenidaHecha: Boolean = false,
+    val perfil: Perfil = Perfil.COMUNIDAD,
     /**
      * Zona elegida: SOLO la celda de 0,1°, nunca la coordenada exacta. Viene fijada en Alcoche
      * (Caranavi), la localidad del piloto; la persona puede cambiarla por lista o por GPS.
@@ -54,6 +58,7 @@ class AjustesStore(context: Context) {
 
     private fun leer() = Ajustes(
         bienvenidaHecha = sp.getBoolean(K_BIENVENIDA, false),
+        perfil = sp.getString(K_PERFIL, null)?.let { runCatching { Perfil.valueOf(it) }.getOrNull() } ?: Perfil.COMUNIDAD,
         celda = Celda.desdeClave(sp.getString(K_CELDA, null)) ?: ZONA_POR_DEFECTO,
         nombrePropio = sp.getString(K_NOMBRE, null),
         origenZona = sp.getString(K_ORIGEN, null)?.let { runCatching { OrigenZona.valueOf(it) }.getOrNull() } ?: OrigenZona.LISTA,
@@ -70,6 +75,7 @@ class AjustesStore(context: Context) {
 
     private fun escribir(a: Ajustes) = sp.edit {
         putBoolean(K_BIENVENIDA, a.bienvenidaHecha)
+        putString(K_PERFIL, a.perfil.name)
         putString(K_CELDA, a.celda?.clave())
         putString(K_NOMBRE, a.nombrePropio)
         putString(K_ORIGEN, a.origenZona?.name)
@@ -86,6 +92,7 @@ class AjustesStore(context: Context) {
 
     private companion object {
         const val K_BIENVENIDA = "bienvenida"
+        const val K_PERFIL = "perfil"
         const val K_CELDA = "celda"
         const val K_NOMBRE = "nombre_zona"
         const val K_ORIGEN = "origen_zona"
