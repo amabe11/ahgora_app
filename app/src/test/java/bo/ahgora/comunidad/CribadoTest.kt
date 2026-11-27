@@ -68,6 +68,22 @@ class CribadoTest {
     }
 
     @Test
+    fun entiende_la_respuesta_de_api_lecturas() {
+        // Forma real devuelta por /api/lecturas (probada con la API local y MongoDB).
+        val texto = """{"coleccion":"lecturas","total":1,"items":[{"node_id":"AHG-SED-01","seq":49,"r":1862,"g":611,"b":529,"c":3052,
+            "r_norm":155.57,"g_norm":51.05,"b_norm":44.2,"medido_en":"2026-11-27T00:23:56.000Z","recibido_en":"2026-11-27T00:23:58.218Z",
+            "test_mode":true,"sensor":"TCS34725","firmware":"ahgora-wifi-0.2","rssi":-57}],
+            "nodos":[{"node_id":"AHG-SED-01","total_24h":51,"ultima":{"node_id":"AHG-SED-01","seq":50,"r":1411,"g":1506,"b":1287,"c":4297,
+            "medido_en":null,"recibido_en":"2026-11-27T00:23:58.218Z","rssi":null}}],"ahora":"2026-11-27T00:24:00.000Z"}"""
+        val r = Json { ignoreUnknownKeys = true }.decodeFromString(bo.ahgora.comunidad.data.remote.LecturasResponse.serializer(), texto)
+        assertEquals(1862, r.items.single().r)
+        assertEquals("AHG-SED-01", r.nodos.single().nodeId)
+        assertEquals(51, r.nodos.single().total24h)
+        assertNull(r.nodos.single().ultima!!.rssi)
+        assertEquals("2026-11-27T00:24:00.000Z", r.ahora)
+    }
+
+    @Test
     fun el_registro_sigue_el_contrato_del_servidor() {
         val json = Json { encodeDefaults = true; explicitNulls = false }
         val m = MuestraDto(codigo = "ALC-SED-261126-AM01", matriz = "sedimento", cabezal = "SED", fechaIso = "2026-11-26T10:00:00-04:00",

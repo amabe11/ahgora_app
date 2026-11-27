@@ -142,3 +142,35 @@ data class LecturaNodoDto(
     val b: Int,
     val c: Int,
 )
+
+/** Una lectura guardada por el servidor (GET /api/lecturas). */
+@Serializable
+data class LecturaServidorDto(
+    @SerialName("node_id") val nodeId: String,
+    val seq: Long = 0,
+    val r: Int,
+    val g: Int,
+    val b: Int,
+    val c: Int,
+    @SerialName("medido_en") val medidoEn: String? = null,
+    @SerialName("recibido_en") val recibidoEn: String? = null,
+    @SerialName("test_mode") val testMode: Boolean? = null,
+    val sensor: String? = null,
+    val firmware: String? = null,
+    val rssi: Int? = null,
+)
+
+@Serializable
+data class NodoLectorDto(
+    @SerialName("node_id") val nodeId: String,
+    val ultima: LecturaServidorDto? = null,
+    @SerialName("total_24h") val total24h: Int = 0,
+)
+
+@Serializable
+data class LecturasResponse(
+    val items: List<LecturaServidorDto> = emptyList(),
+    val nodos: List<NodoLectorDto> = emptyList(),
+    /** Hora del servidor: se usa como punto de partida para no depender del reloj del teléfono. */
+    val ahora: String? = null,
+)

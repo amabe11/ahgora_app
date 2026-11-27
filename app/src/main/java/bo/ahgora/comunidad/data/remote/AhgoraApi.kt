@@ -130,6 +130,23 @@ class AhgoraApi(
             }
         }
 
+    /** `GET /api/lecturas` con `x-ahg-key`: lecturas que el lector ESP32 envió por WiFi, más recientes primero. */
+    suspend fun lecturasLector(baseUrl: String, clave: String, nodo: String? = null, desde: String? = null, limit: Int = 50): LecturasResponse =
+        withContext(Dispatchers.IO) {
+            val q = buildList {
+                add("limit=$limit")
+                nodo?.let { add("node_id=" + java.net.URLEncoder.encode(it, "UTF-8")) }
+                desde?.let { add("desde=" + java.net.URLEncoder.encode(it, "UTF-8")) }
+            }.joinToString("&")
+            val req = Request.Builder().url(url(baseUrl, "api/lecturas?$q")).header("x-ahg-key", clave).get().build()
+            client.newCall(req).execute().use { res ->
+                if (res.code == 404) throw IOException("El servidor todavía no recibe lecturas del lector (falta /api/lecturas)")
+                if (res.code == 401) throw IOException("La clave del equipo ya no es válida")
+                if (!res.isSuccessful) throw IOException("El servidor respondió ${res.code}")
+                json.decodeFromString<LecturasResponse>(res.body?.string().orEmpty())
+            }
+        }
+
     private fun url(base: String, ruta: String) = (if (base.endsWith("/")) base else "$base/") + ruta
 
     companion object {

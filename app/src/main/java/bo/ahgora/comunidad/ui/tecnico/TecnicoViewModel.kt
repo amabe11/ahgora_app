@@ -68,7 +68,8 @@ class Borrador {
     var referenciaBlanca by mutableStateOf("no_medido")
     var ph by mutableStateOf("no_medido")
     // Lecturas
-    var origenLectura by mutableStateOf("bluetooth")
+    /** wifi (lector ESP32 por el hotspot) | bluetooth | manual | demostracion */
+    var origenLectura by mutableStateOf("wifi")
     var refBlanca by mutableStateOf<RgbcDto?>(null)
     var sinUsar by mutableStateOf<RgbcDto?>(null)
     var reaccionada by mutableStateOf<RgbcDto?>(null)
@@ -139,9 +140,14 @@ class TecnicoViewModel(app: Application) : AndroidViewModel(app) {
     // ------------------------------------------------------------------ nueva muestra
 
     fun nuevoBorrador() {
-        borrador = Borrador()
+        borrador = Borrador().apply { if (sesion.value?.demostracion == true) origenLectura = "demostracion" }
         actualizarCodigo()
     }
+
+    // ------------------------------------------------------------------ lector por WiFi
+
+    suspend fun lectoresWifi() = repo.lectoresWifi()
+    suspend fun leerPorWifi(nodo: String, onProgreso: (Int) -> Unit) = repo.leerPorWifi(nodo, onProgreso = onProgreso)
 
     fun actualizarCodigo() {
         val b = borrador

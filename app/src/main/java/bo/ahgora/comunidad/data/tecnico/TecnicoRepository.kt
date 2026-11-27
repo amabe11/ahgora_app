@@ -4,6 +4,9 @@ import bo.ahgora.comunidad.data.prefs.AjustesStore
 import bo.ahgora.comunidad.data.remote.AhgoraApi
 import bo.ahgora.comunidad.data.remote.EventoCustodiaDto
 import bo.ahgora.comunidad.data.remote.LaboratorioDto
+import bo.ahgora.comunidad.data.remote.LecturaServidorDto
+import bo.ahgora.comunidad.data.remote.NodoLectorDto
+import bo.ahgora.comunidad.data.remote.RgbcDto
 import bo.ahgora.comunidad.data.remote.MuestraDto
 import bo.ahgora.comunidad.data.zona.Localidades
 import kotlinx.coroutines.flow.Flow
@@ -143,6 +146,37 @@ class TecnicoRepository(
             }
             ResultadoEnvio(true, pendientes.size)
         }.getOrElse { ResultadoEnvio(false, 0, it.message ?: "No se pudo enviar") }
+    }
+
+    // ------------------------------------------------------------------ lector por WiFi (servidor)
+
+    /** Lectores que enviaron algo al servidor, el más reciente primero. */
+    suspend fun lectoresWifi(): List<NodoLectorDto> {
+        val clave = sesion.clave() ?: throw java.io.IOException("Ingresa con la clave del equipo para leer por WiFi")
+        return api.lecturasLector(ajustes.actual.apiBaseUrl, clave, limit = 1).nodos
+    }
+
+    /**
+     * Espera [n] lecturas NUEVAS del lector [nodo] (las que lleguen al servidor después de tocar «Leer») y
+     * devuelve su promedio. El ESP32 envía de a 10 cada ~10 s, así que suele tardar de 10 a 20 segundos.
+     */
+    suspend fun leerPorWifi(nodo: String, n: Int = 10, timeoutMs: Long = 60_000, onProgreso: (Int) -> Unit = {}): Pair<RgbcDto, LecturaServidorDto> {
+        val clave = sesion.clave() ?: throw java.io.IOException("Ingresa con la clave del equipo para leer por WiFi")
+        val base = ajustes.actual.apiBaseUrl
+        // Punto de partida con la hora del SERVIDOR (el reloj del teléfono puede estar corrido).
+        val desde = api.lecturasLector(base, clave, nodo, limit = 1).ahora
+            ?: throw java.io.IOException("El servidor no informó la hora")
+        val inicio = System.currentTimeMillis()
+        while (System.currentTimeMillis() - inicio < timeoutMs) {
+            kotlinx.coroutines.delay(2_000)
+            val nuevas = api.lecturasLector(base, clave, nodo, desde = desde, limit = 100).items
+            onProgreso(minOf(nuevas.size, n))
+            if (nuevas.size >= n) {
+                val ultimas = nuevas.take(n) // vienen de la más nueva a la más vieja
+                return Cribado.promedio(ultimas.map { RgbcDto(it.r, it.g, it.b, it.c) }) to ultimas.first()
+            }
+        }
+        throw java.io.IOException("No llegaron $n lecturas en ${timeoutMs / 1000} s. ¿El lector está encendido y conectado al hotspot?")
     }
 
     // ------------------------------------------------------------------ exportar

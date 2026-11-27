@@ -54,6 +54,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -350,13 +351,14 @@ private fun PasoLectura(vm: TecnicoViewModel) {
 
     Titulo("Lectura con el lector Ahgora")
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        val ops = listOf("bluetooth" to "Bluetooth", "manual" to "Escribir", "demostracion" to "Demo")
+        val ops = listOf("wifi" to "WiFi", "bluetooth" to "BT", "manual" to "Escribir", "demostracion" to "Demo")
         ops.forEachIndexed { i, (v, t) ->
             SegmentedButton(selected = b.origenLectura == v, onClick = { b.origenLectura = v },
                 shape = SegmentedButtonDefaults.itemShape(i, ops.size), modifier = Modifier.heightIn(min = 48.dp)) { Text(t) }
         }
     }
     when (b.origenLectura) {
+        "wifi" -> LecturaWifi(vm)
         "bluetooth" -> LecturaBluetooth(vm)
         "manual" -> {
             Text("Escribe los valores R, G, B y C que muestra el lector (promedio de 10).", style = MaterialTheme.typography.bodyMedium)
@@ -371,6 +373,81 @@ private fun PasoLectura(vm: TecnicoViewModel) {
                 Text("Llenar con lectura de demostración")
             }
             ResumenLecturas(b.refBlanca, b.sinUsar, b.reaccionada)
+        }
+    }
+}
+
+/**
+ * Lector por WiFi: el ESP32 manda sus lecturas al servidor desde el hotspot del celular; aquí se esperan las
+ * 10 lecturas NUEVAS que lleguen después de tocar «Leer» y se guarda su promedio.
+ */
+@Composable
+private fun LecturaWifi(vm: TecnicoViewModel) {
+    val b = vm.borrador
+    val scope = rememberCoroutineScope()
+    val sesion by vm.sesion.collectAsStateWithLifecycle()
+    val enLinea by vm.enLinea.collectAsStateWithLifecycle()
+    var lectores by remember { mutableStateOf<List<bo.ahgora.comunidad.data.remote.NodoLectorDto>?>(null) }
+    var elegido by rememberSaveable { mutableStateOf<String?>(null) }
+    var leyendo by remember { mutableStateOf<String?>(null) }
+    var progreso by remember { mutableIntStateOf(0) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    fun buscar() = scope.launch {
+        error = null
+        runCatching { vm.lectoresWifi() }
+            .onSuccess { lectores = it; if (elegido == null) elegido = it.firstOrNull()?.nodeId }
+            .onFailure { error = it.message; lectores = emptyList() }
+    }
+    if (sesion?.demostracion == true) {
+        Text("En modo demostración no hay clave del equipo: usa «Demo» o «Escribir».", style = MaterialTheme.typography.bodyMedium)
+        return
+    }
+    if (!enLinea) {
+        Text("Sin internet. El lector WiFi necesita que el celular tenga datos (es el mismo hotspot). Usa «Escribir» si no hay señal.",
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+        return
+    }
+    LaunchedEffect(Unit) { if (lectores == null) buscar() }
+    Text("Activa el hotspot del celular y enciende el lector: él solo se conecta y envía sus lecturas.",
+        style = MaterialTheme.typography.bodyMedium)
+    when {
+        lectores == null -> Row(verticalAlignment = Alignment.CenterVertically) {
+            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp); Spacer(Modifier.width(8.dp)); Text("Buscando lectores…")
+        }
+        lectores!!.isEmpty() -> {
+            Text(error ?: "Todavía no llegó ninguna lectura al servidor.", style = MaterialTheme.typography.bodyMedium)
+            TextButton(onClick = { buscar() }) { Text("Buscar de nuevo") }
+        }
+        else -> {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                lectores!!.forEach { n ->
+                    val seg = n.ultima?.recibidoEn?.let { runCatching { (System.currentTimeMillis() - java.time.Instant.parse(it).toEpochMilli()) / 1000 }.getOrNull() }
+                    val vivo = seg != null && seg < 30
+                    FilterChip(selected = elegido == n.nodeId, onClick = { elegido = n.nodeId },
+                        leadingIcon = { Box(Modifier.size(10.dp).background(if (vivo) Paleta.Verde else MaterialTheme.colorScheme.outline, CircleShape)) },
+                        label = { Text(n.nodeId + if (vivo) " · enviando" else " · sin señal") }, modifier = Modifier.heightIn(min = 48.dp))
+                }
+            }
+            fun leer(cual: String, guardar: (RgbcDto) -> Unit) {
+                val nodo = elegido ?: return
+                scope.launch {
+                    leyendo = cual; progreso = 0; error = null
+                    runCatching { vm.leerPorWifi(nodo) { progreso = it } }
+                        .onSuccess { (prom, ultima) ->
+                            guardar(prom)
+                            b.lector = LectorDto(ultima.nodeId, ultima.testMode, ultima.sensor)
+                            if (cual == "blanca" && b.referenciaBlanca == "no_medido") b.referenciaBlanca = "ok"
+                        }
+                        .onFailure { error = it.message }
+                    leyendo = null
+                }
+            }
+            Text("Coloca cada tarjeta o tira y toca «Leer». Tarda unos 10 a 20 segundos.", style = MaterialTheme.typography.bodyMedium)
+            FilaLectura("1. Tarjeta blanca", b.refBlanca, leyendo == "blanca", progreso, leyendo == null) { leer("blanca") { b.refBlanca = it } }
+            FilaLectura("2. Casilla de Hg sin usar", b.sinUsar, leyendo == "sin", progreso, leyendo == null) { leer("sin") { b.sinUsar = it } }
+            FilaLectura("3. Casilla de Hg reaccionada", b.reaccionada, leyendo == "rea", progreso, leyendo == null) { leer("rea") { b.reaccionada = it } }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
         }
     }
 }

@@ -238,7 +238,7 @@ fun PantallaDetalleMuestra(vm: TecnicoViewModel, codigo: String, onBorrada: () -
                 FilaRgbc("Tarjeta blanca", l.referenciaBlanca)
                 FilaRgbc("Hg sin usar", l.casillaSinUsar)
                 FilaRgbc("Hg reaccionada", l.casillaReaccionada)
-                Dato("Origen", when (l.origen) { "bluetooth" -> "Lector por Bluetooth"; "manual" -> "Escrita a mano"; else -> "Demostración" })
+                Dato("Origen", when (l.origen) { "wifi" -> "Lector por WiFi"; "bluetooth" -> "Lector por Bluetooth"; "manual" -> "Escrita a mano"; else -> "Demostración" })
                 m.lector?.nodeId?.let { Dato("Lector", it) }
                 m.calibracion?.let { Dato("Calibración", it) }
             }
