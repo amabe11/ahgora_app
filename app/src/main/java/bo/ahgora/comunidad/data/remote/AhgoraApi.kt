@@ -63,6 +63,22 @@ data class ReporteDto(
     val zona: ZonaDto?,
     val creado_en: String,
     val origen: String = "ahgora-comunidad-android",
+    /** Medición comunitaria con el kit (después del video tutorial). Va como reporte «otro», en revisión. */
+    val kit: KitDto? = null,
+)
+
+/** Lo que la persona vio al medir con el kit. Orienta el muestreo del equipo: no es un resultado. */
+@Serializable
+data class KitDto(
+    /** sin_cambio | cambio_leve | cambio_fuerte | no_seguro | invalido */
+    val resultado: String,
+    /** sedimento | cola */
+    val matriz: String,
+    @SerialName("cloro_sin_color") val cloroSinColor: Boolean?,
+    @SerialName("pasos_hechos") val pasosHechos: Int,
+    @SerialName("pasos_total") val pasosTotal: Int,
+    @SerialName("tutorial_visto") val tutorialVisto: Boolean,
+    val rio: String? = null,
 )
 
 class ServidorNoRecibeReportes : IOException("El servidor todavía no recibe reportes")

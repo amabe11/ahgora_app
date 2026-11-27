@@ -57,6 +57,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -135,7 +136,7 @@ fun PantallaNuevaMuestra(vm: TecnicoViewModel, onGuardada: () -> Unit) {
             LinearProgressIndicator(progress = { (b.paso + 1f) / TITULOS.size }, modifier = Modifier.fillMaxWidth())
         }
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.weight(1f).verticalScroll(key(b.paso) { rememberScrollState() }).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             when (b.paso) {
@@ -311,8 +312,9 @@ private fun PasoProcedimiento(b: Borrador) {
     }
 }
 
+/** Temporizador de un paso (lo usan el técnico y el kit comunitario). */
 @Composable
-private fun Temporizador(segundos: Int, onTermina: () -> Unit) {
+internal fun Temporizador(segundos: Int, onTermina: () -> Unit) {
     var restante by rememberSaveable { mutableIntStateOf(segundos) }
     var corriendo by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current

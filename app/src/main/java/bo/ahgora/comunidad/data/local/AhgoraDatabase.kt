@@ -58,13 +58,13 @@ class Convertidores {
     @TypeConverter fun estadoReporte(v: String): EstadoReporte = EstadoReporte.valueOf(v)
 }
 
-// v2: tabla «muestras» del modo técnico. La migración automática solo agrega la tabla nueva:
-// los avisos y reportes guardados se conservan.
+// v2: tabla «muestras» del modo técnico. v3: columna kitJson en reportes (medición comunitaria con el kit).
+// Las migraciones automáticas solo agregan: los avisos, reportes y muestras guardados se conservan.
 @Database(
     entities = [AvisoEntity::class, ReporteEntity::class, MuestraEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 @TypeConverters(Convertidores::class)
 abstract class AhgoraDatabase : RoomDatabase() {

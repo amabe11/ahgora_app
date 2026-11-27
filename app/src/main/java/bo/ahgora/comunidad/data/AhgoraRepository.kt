@@ -10,6 +10,7 @@ import bo.ahgora.comunidad.data.local.ReporteEntity
 import bo.ahgora.comunidad.data.prefs.AjustesStore
 import bo.ahgora.comunidad.data.prefs.OrigenZona
 import bo.ahgora.comunidad.data.remote.AhgoraApi
+import bo.ahgora.comunidad.data.remote.KitDto
 import bo.ahgora.comunidad.data.remote.ReporteDto
 import bo.ahgora.comunidad.data.remote.ServidorNoRecibeReportes
 import bo.ahgora.comunidad.data.remote.ZonaDto
@@ -131,12 +132,13 @@ class AhgoraRepository(
 
     // ------------------------------------------------------------------ reportes comunitarios
 
-    suspend fun guardarReporte(tipo: String, descripcion: String, incluirZona: Boolean): Long {
+    suspend fun guardarReporte(tipo: String, descripcion: String, incluirZona: Boolean, kit: KitDto? = null): Long {
         val celda = if (incluirZona) ajustes.actual.celda else null
         return db.reportes().insertar(
             ReporteEntity(
                 tipo = tipo, descripcion = descripcion.trim().take(500),
                 latIdx = celda?.latIdx, lonIdx = celda?.lonIdx, creadoEn = System.currentTimeMillis(),
+                kitJson = kit?.let { api.json.encodeToString(KitDto.serializer(), it) },
             )
         )
     }
@@ -152,6 +154,7 @@ class AhgoraRepository(
                 tipo = r.tipo, descripcion = r.descripcion,
                 zona = celda?.let { ZonaDto(it.latMin, it.lonMin, it.latMax, it.lonMax) },
                 creado_en = Instant.ofEpochMilli(r.creadoEn).toString(),
+                kit = r.kitJson?.let { runCatching { api.json.decodeFromString(KitDto.serializer(), it) }.getOrNull() },
             )
             try {
                 api.enviarReporte(base, dto)

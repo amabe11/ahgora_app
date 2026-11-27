@@ -11,6 +11,7 @@ import bo.ahgora.comunidad.data.local.ReporteEntity
 import bo.ahgora.comunidad.data.prefs.Ajustes
 import bo.ahgora.comunidad.data.prefs.OrigenZona
 import bo.ahgora.comunidad.data.prefs.Perfil
+import bo.ahgora.comunidad.data.remote.KitDto
 import bo.ahgora.comunidad.data.zona.Celda
 import bo.ahgora.comunidad.notif.Notificador
 import bo.ahgora.comunidad.sync.SyncWorker
@@ -133,8 +134,15 @@ class AhgoraViewModel(app: Application) : AndroidViewModel(app) {
 
     // ------------------------------------------------------------------ reportes
 
-    fun enviarReporte(tipo: String, descripcion: String, incluirZona: Boolean) = viewModelScope.launch {
-        repo.guardarReporte(tipo, descripcion, incluirZona)
+    // ------------------------------------------------------------------ kit comunitario
+
+    fun marcarTutorialKitVisto() = c.ajustes.actualizar { it.copy(tutorialKitVisto = true) }
+
+    /** La medición con el kit viaja como reporte comunitario («en revisión»), con el detalle del kit. */
+    fun enviarMedicionKit(kit: KitDto, descripcion: String, incluirZona: Boolean) = enviarReporte("otro", descripcion, incluirZona, kit)
+
+    fun enviarReporte(tipo: String, descripcion: String, incluirZona: Boolean, kit: KitDto? = null) = viewModelScope.launch {
+        repo.guardarReporte(tipo, descripcion, incluirZona, kit)
         if (enLinea.value) {
             val n = repo.enviarReportesPendientes()
             _mensajes.tryEmit(if (n > 0) "Reporte enviado. Queda en revisión." else "Reporte guardado. Se enviará más tarde.")

@@ -25,6 +25,8 @@ data class Ajustes(
     val nombrePropio: String? = null,
     val origenZona: OrigenZona? = OrigenZona.LISTA,
     val notificaciones: Boolean = false,
+    /** Ya vio el video tutorial del kit: recién entonces puede medir. */
+    val tutorialKitVisto: Boolean = false,
     val escalaTexto: Float = 1f,
     val modoDemo: Boolean = BuildConfig.DEMO_MODE_DEFAULT,
     val demoPaso: Int = 0,
@@ -63,6 +65,7 @@ class AjustesStore(context: Context) {
         nombrePropio = sp.getString(K_NOMBRE, null),
         origenZona = sp.getString(K_ORIGEN, null)?.let { runCatching { OrigenZona.valueOf(it) }.getOrNull() } ?: OrigenZona.LISTA,
         notificaciones = sp.getBoolean(K_NOTIF, false),
+        tutorialKitVisto = sp.getBoolean(K_TUTORIAL_KIT, false),
         escalaTexto = sp.getFloat(K_ESCALA, 1f),
         modoDemo = sp.getBoolean(K_DEMO, BuildConfig.DEMO_MODE_DEFAULT),
         demoPaso = sp.getInt(K_DEMO_PASO, 0),
@@ -80,6 +83,7 @@ class AjustesStore(context: Context) {
         putString(K_NOMBRE, a.nombrePropio)
         putString(K_ORIGEN, a.origenZona?.name)
         putBoolean(K_NOTIF, a.notificaciones)
+        putBoolean(K_TUTORIAL_KIT, a.tutorialKitVisto)
         putFloat(K_ESCALA, a.escalaTexto)
         putBoolean(K_DEMO, a.modoDemo)
         putInt(K_DEMO_PASO, a.demoPaso)
@@ -97,6 +101,7 @@ class AjustesStore(context: Context) {
         const val K_NOMBRE = "nombre_zona"
         const val K_ORIGEN = "origen_zona"
         const val K_NOTIF = "notificaciones"
+        const val K_TUTORIAL_KIT = "tutorial_kit_visto"
         const val K_ESCALA = "escala_texto"
         const val K_DEMO = "modo_demo"
         const val K_DEMO_PASO = "demo_paso"

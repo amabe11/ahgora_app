@@ -45,6 +45,7 @@ import bo.ahgora.comunidad.ui.pantallas.PantallaAyuda
 import bo.ahgora.comunidad.ui.pantallas.PantallaBienvenida
 import bo.ahgora.comunidad.ui.pantallas.PantallaDetalleAviso
 import bo.ahgora.comunidad.ui.pantallas.PantallaInicio
+import bo.ahgora.comunidad.ui.pantallas.PantallaKit
 import bo.ahgora.comunidad.ui.pantallas.PantallaMapa
 import bo.ahgora.comunidad.ui.pantallas.PantallaPreferencias
 import bo.ahgora.comunidad.ui.pantallas.PantallaReporte
@@ -63,6 +64,7 @@ private object Rutas {
     const val ZONA = "zona"
     const val PREFERENCIAS = "preferencias"
     const val REPORTE = "reporte"
+    const val KIT = "kit"
     fun detalle(id: String) = "aviso/$id"
 }
 
@@ -78,7 +80,7 @@ private val PESTANAS = listOf(
 private val TITULOS = mapOf(
     Rutas.INICIO to "Ahgora", Rutas.AVISOS to "Avisos", Rutas.MAPA to "Mapa",
     Rutas.AYUDA to "Ayuda", Rutas.DETALLE to "Aviso", Rutas.ZONA to "Cambiar comunidad",
-    Rutas.PREFERENCIAS to "Preferencias", Rutas.REPORTE to "Reportar algo",
+    Rutas.PREFERENCIAS to "Preferencias", Rutas.REPORTE to "Reportar algo", Rutas.KIT to "Medir con el kit",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -169,6 +171,7 @@ fun RaizApp(vm: AhgoraViewModel, avisoDesdeNotificacion: StateFlow<String?>, onA
                         onCambiarZona = { nav.navigate(Rutas.ZONA) },
                         onAyuda = { irAPestana(nav, Rutas.AYUDA) },
                         onReportar = { nav.navigate(Rutas.REPORTE) },
+                        onMedir = { nav.navigate(Rutas.KIT) },
                     )
                 }
                 composable(Rutas.AVISOS) { PantallaAvisos(vm, onAbrirAviso = { nav.navigate(Rutas.detalle(it)) }) }
@@ -188,6 +191,7 @@ fun RaizApp(vm: AhgoraViewModel, avisoDesdeNotificacion: StateFlow<String?>, onA
                 composable(Rutas.ZONA) { PantallaZona(vm, onListo = { nav.popBackStack() }) }
                 composable(Rutas.PREFERENCIAS) { PantallaPreferencias(vm, onCambiarZona = { nav.navigate(Rutas.ZONA) }) }
                 composable(Rutas.REPORTE) { PantallaReporte(vm, onListo = { nav.popBackStack() }) }
+                composable(Rutas.KIT) { PantallaKit(vm, onListo = { nav.popBackStack() }) }
             }
         }
     }

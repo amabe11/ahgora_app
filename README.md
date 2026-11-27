@@ -22,6 +22,26 @@ Gold4Good Bolivia 2026 · Desafío ORO-4.1. Implementa la sección «Android Com
 | **Accesibilidad** | Estado = texto + ícono + color, áreas táctiles ≥ 48 dp, etiquetas para TalkBack y tamaño de texto propio (Normal / Grande / Muy grande). |
 | **Modo demostración** | Avisos rotulados **EJEMPLO** generados alrededor de la zona elegida, para mostrar la app sin servidor ni señal. En *Preferencias → Simular siguiente actualización* el caso avanza: pendiente → en análisis → confirmado → aviso nuevo, con notificación. |
 
+## Medir con el kit (comunarios)
+
+Desde Inicio → **Medir con el kit**. Antes de medir, la persona tiene que ver el **video tutorial** completo (la app
+recuerda que ya lo vio y se puede volver a ver con «Video»). Después, cuatro pasos sencillos:
+
+1. Qué mide: barro del río (sedimento) o residuo de la mina (cola), y de dónde (río Coroico por defecto).
+2. Los 10 pasos del kit en palabras simples, con temporizadores (15 min, 5 min, 2 min, 30 s).
+3. Mirar la tira: ¿la tira de cloro quedó sin color? y comparar la casilla de mercurio con la carta de colores del kit.
+4. Resultado (no se vio cambio / hay que revisarla / hay que llevarla al laboratorio / la prueba no sirvió / pide
+   ayuda) con qué hacer, y envío voluntario al equipo con consentimiento y zona aproximada.
+
+La medición viaja como **reporte comunitario** (`POST /api/reportes`, tipo `otro` con el campo `kit`): queda en
+revisión, orienta el muestreo del equipo y **nunca** se publica como aviso. En Ahgora Web aparece en «Reportes
+comunitarios» como «Medición con el kit».
+
+**Video tutorial:** poner el archivo en `app/src/main/res/raw/tutorial_kit.mp4` (funciona sin internet) o una
+dirección en `local.properties` (`ahgora.tutorialKitUrl=https://…`). Sin video, la app muestra su lugar y deja
+seguir marcando «Ya vi el tutorial completo» (por ejemplo, después de verlo con el promotor). Los textos de los pasos
+y los colores de la carta son propuestas para validar con el laboratorio aliado y con la comunidad.
+
 ## Modo técnico (segundo usuario)
 
 Una sola app con dos perfiles (guía de la solución, secciones 6.2 y 7.6). Se entra desde la bienvenida («Soy técnico

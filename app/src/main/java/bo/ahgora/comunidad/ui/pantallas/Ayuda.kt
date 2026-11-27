@@ -59,6 +59,8 @@ private val PREGUNTAS = listOf(
         "más mercurio; el sábalo, la yatorana y el pacú, menos. Mira la pestaña Peces del Mapa y pregunta en tu centro de salud.",
     "¿Por qué no se analiza el agua?" to "El mercurio se junta en el fondo del río y en los peces, más que en el agua. " +
         "Por eso se revisan esas muestras.",
+    "¿Puedo medir yo mismo?" to "Sí, con el kit Ahgora. Primero mira el video tutorial completo (en «Medir con el kit»). " +
+        "Tu medición es una primera señal: se envía al equipo, que decide si la muestra va al laboratorio.",
     "¿Funciona sin internet?" to "Sí. Los avisos, la ayuda y los contactos quedan guardados en el teléfono.",
     "¿Qué datos guarda?" to "Solo tu comunidad y tus preferencias. No pide cuenta ni guarda dónde estás exactamente.",
 )

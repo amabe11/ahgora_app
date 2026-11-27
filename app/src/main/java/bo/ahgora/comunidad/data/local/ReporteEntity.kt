@@ -21,4 +21,6 @@ data class ReporteEntity(
     val estado: EstadoReporte = EstadoReporte.EN_COLA,
     val intentos: Int = 0,
     val enviadoEn: Long? = null,
+    /** Medición con el kit comunitario (JSON de KitDto), si el reporte la trae. */
+    val kitJson: String? = null,
 )

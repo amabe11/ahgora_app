@@ -1,0 +1,352 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "96324237aa43d5454c6cf3fae1744788",
+    "entities": [
+      {
+        "tableName": "avisos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `version` INTEGER NOT NULL, `origen` TEXT NOT NULL, `matriz` TEXT NOT NULL, `estado` TEXT NOT NULL, `tipo` TEXT, `mensaje` TEXT NOT NULL, `latIdx` INTEGER NOT NULL, `lonIdx` INTEGER NOT NULL, `publicadoEn` INTEGER NOT NULL, `descargadoEn` INTEGER NOT NULL, `actualizadoEn` INTEGER NOT NULL, `laboratorio` TEXT, `demostracion` INTEGER NOT NULL, `retirado` INTEGER NOT NULL, `retiradoEn` INTEGER, `motivoRetiro` TEXT, `reemplazaA` TEXT, `reemplazadoPor` TEXT, `leido` INTEGER NOT NULL, `huella` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "origen",
+            "columnName": "origen",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matriz",
+            "columnName": "matriz",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mensaje",
+            "columnName": "mensaje",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latIdx",
+            "columnName": "latIdx",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lonIdx",
+            "columnName": "lonIdx",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publicadoEn",
+            "columnName": "publicadoEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descargadoEn",
+            "columnName": "descargadoEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actualizadoEn",
+            "columnName": "actualizadoEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "laboratorio",
+            "columnName": "laboratorio",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "demostracion",
+            "columnName": "demostracion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "retirado",
+            "columnName": "retirado",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "retiradoEn",
+            "columnName": "retiradoEn",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "motivoRetiro",
+            "columnName": "motivoRetiro",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reemplazaA",
+            "columnName": "reemplazaA",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reemplazadoPor",
+            "columnName": "reemplazadoPor",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "leido",
+            "columnName": "leido",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "huella",
+            "columnName": "huella",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_avisos_origen",
+            "unique": false,
+            "columnNames": [
+              "origen"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_avisos_origen` ON `${TABLE_NAME}` (`origen`)"
+          },
+          {
+            "name": "index_avisos_latIdx_lonIdx",
+            "unique": false,
+            "columnNames": [
+              "latIdx",
+              "lonIdx"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_avisos_latIdx_lonIdx` ON `${TABLE_NAME}` (`latIdx`, `lonIdx`)"
+          }
+        ]
+      },
+      {
+        "tableName": "reportes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tipo` TEXT NOT NULL, `descripcion` TEXT NOT NULL, `latIdx` INTEGER, `lonIdx` INTEGER, `creadoEn` INTEGER NOT NULL, `estado` TEXT NOT NULL, `intentos` INTEGER NOT NULL, `enviadoEn` INTEGER, `kitJson` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latIdx",
+            "columnName": "latIdx",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lonIdx",
+            "columnName": "lonIdx",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "creadoEn",
+            "columnName": "creadoEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intentos",
+            "columnName": "intentos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enviadoEn",
+            "columnName": "enviadoEn",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "kitJson",
+            "columnName": "kitJson",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "muestras",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`codigo` TEXT NOT NULL, `registroJson` TEXT NOT NULL, `matriz` TEXT NOT NULL, `semaforo` TEXT NOT NULL, `certeza` TEXT NOT NULL, `fechaMs` INTEGER NOT NULL, `lat` REAL, `lon` REAL, `responsable` TEXT NOT NULL, `demostracion` INTEGER NOT NULL, `fotoRuta` TEXT, `pendienteSync` INTEGER NOT NULL, `soloLocal` INTEGER NOT NULL, `sincronizadoEn` INTEGER, `actualizadoEn` INTEGER NOT NULL, PRIMARY KEY(`codigo`))",
+        "fields": [
+          {
+            "fieldPath": "codigo",
+            "columnName": "codigo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "registroJson",
+            "columnName": "registroJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matriz",
+            "columnName": "matriz",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "semaforo",
+            "columnName": "semaforo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "certeza",
+            "columnName": "certeza",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaMs",
+            "columnName": "fechaMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lon",
+            "columnName": "lon",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "responsable",
+            "columnName": "responsable",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "demostracion",
+            "columnName": "demostracion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fotoRuta",
+            "columnName": "fotoRuta",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pendienteSync",
+            "columnName": "pendienteSync",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soloLocal",
+            "columnName": "soloLocal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sincronizadoEn",
+            "columnName": "sincronizadoEn",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "actualizadoEn",
+            "columnName": "actualizadoEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "codigo"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_muestras_fechaMs",
+            "unique": false,
+            "columnNames": [
+              "fechaMs"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_muestras_fechaMs` ON `${TABLE_NAME}` (`fechaMs`)"
+          },
+          {
+            "name": "index_muestras_pendienteSync",
+            "unique": false,
+            "columnNames": [
+              "pendienteSync"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_muestras_pendienteSync` ON `${TABLE_NAME}` (`pendienteSync`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '96324237aa43d5454c6cf3fae1744788')"
+    ]
+  }
+}

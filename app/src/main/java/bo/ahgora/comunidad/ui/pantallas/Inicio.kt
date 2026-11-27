@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.SupportAgent
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.Button
@@ -67,6 +68,7 @@ fun PantallaInicio(
     onCambiarZona: () -> Unit,
     onAyuda: () -> Unit,
     onReportar: () -> Unit,
+    onMedir: () -> Unit,
 ) {
     val ajustes by vm.ajustes.collectAsStateWithLifecycle()
     val avisos by vm.avisos.collectAsStateWithLifecycle()
@@ -132,9 +134,12 @@ fun PantallaInicio(
             }
         }
 
-        // Tres botones grandes
+        // Cuatro botones grandes
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            BotonGrande(Icons.Outlined.Science, "Medir con el kit", Modifier.weight(1f), onMedir)
             BotonGrande(Icons.Outlined.Map, "Mapa", Modifier.weight(1f), onVerMapa)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
             BotonGrande(Icons.Outlined.SupportAgent, "Preguntar", Modifier.weight(1f), onAyuda)
             BotonGrande(Icons.Outlined.Campaign, "Reportar", Modifier.weight(1f), onReportar)
         }

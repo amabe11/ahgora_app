@@ -35,6 +35,12 @@ android {
             "String", "API_BASE_URL",
             "\"${asBaseUrl(localProp("ahgora.apiBaseUrl", "https://taku-server.vercel.app/"))}\""
         )
+        // Video tutorial del kit comunitario: se usa app/src/main/res/raw/tutorial_kit.mp4 si existe; si no, esta
+        // dirección (ahgora.tutorialKitUrl en local.properties). Vacía = la app muestra el lugar del video.
+        buildConfigField(
+            "String", "TUTORIAL_KIT_URL",
+            "\"${localProp("ahgora.tutorialKitUrl", "")}\""
+        )
         buildConfigField(
             "boolean", "DEMO_MODE_DEFAULT",
             localProp("ahgora.demoMode", "true").toBoolean().toString()
